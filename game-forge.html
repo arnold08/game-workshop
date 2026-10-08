@@ -1,0 +1,1989 @@
+<title>Game Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lilita+One&display=swap">
+<style>
+/* Layout: title + draw card, sticky section tabs, effort ladder, filterable genre grid, mechanics grid, toolkit columns, plan builder */
+:root{
+  --bg:#e9edf5; --surface:#ffffff; --soft:#f1f4fb; --ink:#12183a; --muted:#4d5578;
+  --line:#12183a; --shadow:#12183a; --pop:#ffd23f; --fav:#ff4f7b;
+  --scratch:#ff8c1a; --godot:#478cbf; --on-badge:#12183a; --on-pop:#12183a; --focus:#2b59ff;
+  --display:"Lilita One","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --warn:#b4231f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1128; --surface:#181e40; --soft:#10163a; --ink:#eef1ff; --muted:#aab2d8;
+    --line:#4a54a0; --shadow:#04061a; --fav:#ff7a9c; --focus:#8fb0ff; --warn:#ff8f8a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1128; --surface:#181e40; --soft:#10163a; --ink:#eef1ff; --muted:#aab2d8;
+  --line:#4a54a0; --shadow:#04061a; --fav:#ff7a9c; --focus:#8fb0ff; --warn:#ff8f8a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:72rem;margin:0 auto;padding-inline:16px;padding-block:8px 64px}
+
+/* header */
+.top{padding-block:28px 22px;display:grid;gap:10px}
+.eyebrow{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:clamp(2.6rem,9vw,4.6rem)}
+.lede{max-width:40rem;font-size:1.1rem;color:var(--muted)}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:3px solid var(--line)}
+.tabs-in{max-width:72rem;margin:0 auto;padding:10px 16px;display:flex;gap:8px;overflow-x:auto}
+.tabs a{white-space:nowrap;text-decoration:none;font-family:var(--display);font-size:1rem;padding:5px 13px;border:3px solid var(--line);border-radius:10px;background:var(--surface)}
+.tabs a:hover{background:var(--pop);color:var(--on-pop)}
+
+/* sections */
+.sec{padding-block:38px 6px;scroll-margin-top:70px}
+.sec-head{display:grid;gap:6px;margin-bottom:18px;max-width:46rem}
+.sec-head h2{font-size:clamp(1.7rem,4.5vw,2.4rem)}
+.sec-head p{color:var(--muted)}
+
+/* generic card */
+.card{background:var(--surface);border:3px solid var(--line);border-radius:14px;box-shadow:5px 5px 0 var(--shadow);padding:16px;min-width:0}
+.card:target,.card.flash{outline:4px solid var(--pop);outline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,19.5rem),1fr));gap:22px}
+
+/* badges and meters */
+.plat{display:inline-block;font-family:var(--display);font-size:.82rem;letter-spacing:.04em;padding:1px 9px;border:2px solid var(--line);border-radius:6px;color:var(--on-badge);white-space:nowrap}
+.plat.scratch{background:var(--scratch)}
+.plat.godot{background:var(--godot)}
+.plat.either{background:linear-gradient(90deg,var(--scratch) 0 50%,var(--godot) 50% 100%)}
+.fav{display:inline-block;font-family:var(--display);font-size:.74rem;letter-spacing:.04em;background:var(--fav);color:var(--on-badge);border:2px solid var(--line);border-radius:6px;padding:1px 8px;white-space:nowrap}
+.pips{display:inline-flex;gap:3px;vertical-align:middle}
+.pips i{display:block;width:12px;height:12px;border:2px solid var(--line);border-radius:3px}
+.pips i.on{background:var(--ink)}
+.eff{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-size:.95rem}
+.time{font-size:.85rem;color:var(--muted)}
+
+/* draw */
+.draw{display:grid;gap:16px}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.slot{background:var(--soft);border:2.5px dashed var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;align-content:start;min-width:0}
+.slot .lab{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.slot .val{font-family:var(--display);font-size:1.45rem;line-height:1.15}
+.slot .sub{font-size:.9rem;color:var(--muted)}
+.slot .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+@media (max-width:680px){.slots{grid-template-columns:minmax(0,1fr)}}
+
+/* buttons */
+.btn{font-family:var(--display);font-size:1.05rem;background:var(--pop);color:var(--on-pop);border:3px solid var(--line);border-radius:10px;padding:7px 15px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.ghost{background:var(--surface);color:var(--ink)}
+.btn.small{font-size:.85rem;padding:3px 10px;box-shadow:2px 2px 0 var(--shadow)}
+
+/* ladder */
+.ladder{display:grid;gap:12px}
+.rung{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:8px 20px;align-items:start;background:var(--surface);border:3px solid var(--line);border-radius:12px;padding:12px 14px}
+.rung-h{display:grid;gap:2px}
+@media (max-width:680px){.rung{grid-template-columns:minmax(0,1fr)}}
+
+/* chips */
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips a,.chips button{font:inherit;font-size:.85rem;text-decoration:none;color:var(--ink);background:var(--soft);border:2px solid var(--line);border-radius:999px;padding:1px 10px;cursor:pointer;display:inline-block}
+.chips a:hover,.chips button:hover{background:var(--pop);color:var(--on-pop)}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:end;margin-bottom:20px}
+.fgroup{display:grid;gap:5px}
+.fgroup .lab{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font-family:var(--display);font-size:.95rem;background:var(--surface);color:var(--ink);border:3px solid var(--line);border-radius:10px;padding:3px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.check{display:flex;gap:8px;align-items:center;font-weight:700;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--fav)}
+.count{color:var(--muted);font-size:.95rem;margin-bottom:14px}
+
+/* genre card */
+.genre{display:grid;gap:10px;align-content:start}
+.g-head{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.g-head h3{font-size:1.45rem}
+.insp{font-size:.88rem;color:var(--muted)}
+.pitch{font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.genre dl{margin:0;display:grid;gap:2px}
+.genre dt{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:6px}
+.genre dd{margin:0}
+.note{font-size:.92rem;color:var(--muted);border-top:2px dashed var(--line);padding-top:10px}
+.genre .btn{justify-self:start;margin-top:2px}
+
+/* mechanic card */
+.mech{display:grid;gap:9px;align-content:start}
+.mech header{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.mech h3{font-size:1.25rem}
+.mech .tips{display:grid;gap:8px}
+.tip{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;font-size:.93rem}
+.tip .plat{font-size:.72rem;padding:0 7px}
+.used{display:grid;gap:5px}
+.used .lab{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+/* toolkit */
+.tk-group{margin-bottom:30px}
+.tk-group h3{font-size:1.5rem;margin-bottom:12px}
+.tk{display:grid;gap:8px;align-content:start}
+.tk h4{font-family:var(--display);font-weight:400;font-size:1.2rem;margin:0}
+.ask{background:var(--soft);border:2px dashed var(--line);border-radius:10px;padding:8px 10px;font-size:.93rem}
+.ask b{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tk a{font-weight:700}
+
+/* plan */
+.plan{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.plan{grid-template-columns:minmax(0,1fr)}}
+.form{display:grid;gap:14px}
+.f2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:520px){.f2{grid-template-columns:minmax(0,1fr)}}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-weight:700}
+.field .help{font-size:.85rem;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:3px solid var(--line);border-radius:10px;padding:7px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:4.5rem}
+.hint{font-size:.92rem;background:var(--soft);border:2px dashed var(--line);border-radius:10px;padding:8px 10px}
+.hint.bad{color:var(--warn);border-style:solid}
+.out{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);display:grid;gap:12px}
+@media (max-width:860px){.out{position:static}}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--body);font-size:.92rem;background:var(--soft);border:2px dashed var(--line);border-radius:10px;padding:12px}
+.msg{font-size:.9rem;color:var(--muted);min-height:1.3em}
+/* build guide */
+.ready{display:inline-block;font-family:var(--display);font-size:.74rem;letter-spacing:.04em;background:var(--pop);color:var(--on-pop);border:2px solid var(--line);border-radius:6px;padding:1px 8px;white-space:nowrap}
+.cta{display:grid;gap:10px;margin-top:30px;justify-items:start}
+.cta h3{font-size:1.7rem}
+.cta p{color:var(--muted);max-width:40rem}
+.guide-sum{display:grid;gap:12px;margin-bottom:22px}
+.guide-sum h3{font-size:1.7rem}
+.sum-row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-bottom:22px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.box{display:grid;gap:10px;align-content:start}
+.box h3{font-size:1.25rem}
+.list{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.list li{display:flex;gap:10px;align-items:flex-start}
+.list input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--godot)}
+.bullets{margin:0;padding-left:1.3rem;display:grid;gap:7px}
+.notice{background:var(--soft);border:2px solid var(--line);border-radius:10px;padding:8px 12px}
+.prog{display:grid;gap:6px;margin-bottom:22px}
+.bar{height:16px;border:3px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pop);width:0}
+.steps{display:grid;gap:24px}
+.step{display:grid;gap:12px}
+.step.done{opacity:.7}
+.step-h{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.step-h h3{font-size:1.4rem}
+.step-n{display:block;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:2px}
+.goal{font-weight:700}
+.test{background:var(--soft);border:2px dashed var(--line);border-radius:10px;padding:8px 10px}
+.test b{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.code{border:3px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.code-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 10px;background:var(--soft);border-bottom:3px solid var(--line);font-size:.85rem;font-weight:700}
+.code pre{border:0;border-radius:0;background:var(--surface);overflow-x:auto;white-space:pre;word-break:normal;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.5;tab-size:4}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.code pre code{background:none;border:0;padding:0;font-size:inherit}
+.done-label{display:flex;gap:8px;align-items:center;font-weight:700;cursor:pointer}
+.done-label input{width:22px;height:22px;accent-color:var(--fav)}
+.foot{margin-top:40px;color:var(--muted);font-size:.9rem;max-width:44rem}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Scratch and Godot project planner</p>
+    <h1>Game Forge</h1>
+    <p class="lede">Pick a game to build, see which tool suits it, and see how big the job is before starting. Genres, mechanics, a planning toolkit and a one-page plan builder are all below.</p>
+  </header>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-in">
+    <a href="#draw">Draw</a><a href="#ladder">Effort</a><a href="#genres">Genres</a><a href="#mechanics">Mechanics</a><a href="#toolkit">Toolkit</a><a href="#plan">My plan</a><a href="#guide" id="tabGuide" hidden>Build guide</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section class="sec" id="draw" aria-labelledby="h-draw">
+    <div class="sec-head">
+      <h2 id="h-draw">Draw a project</h2>
+      <p>One genre, one twist, one limit. Re-roll any slot until it sounds fun, then send it to the plan builder.</p>
+    </div>
+    <div class="card draw">
+      <div class="slots" id="slots" aria-live="polite"></div>
+      <div class="actions">
+        <button class="btn" id="drawAll" type="button">Draw all three</button>
+        <button class="btn ghost" id="drawPlan" type="button">Plan this combo</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="ladder" aria-labelledby="h-ladder">
+    <div class="sec-head">
+      <h2 id="h-ladder">How big is the job?</h2>
+      <p>Effort ratings are a rough guide to a playable first version, at a few hours a week with a parent nearby. Tap a genre to jump to it.</p>
+    </div>
+    <div class="ladder" id="ladderBox"></div>
+  </section>
+
+  <section class="sec" id="genres" aria-labelledby="h-genres">
+    <div class="sec-head">
+      <h2 id="h-genres">Genres</h2>
+      <p>Each card shows the best tool, the effort, the mechanics inside, and what to build first. "Scratch or Godot" means it works in both, and the note says what changes.</p>
+    </div>
+    <div class="filters">
+      <div class="fgroup"><span class="lab" id="l-plat">Tool</span>
+        <div class="seg" id="fPlat" role="group" aria-labelledby="l-plat">
+          <button type="button" data-v="all" aria-pressed="true">All</button>
+          <button type="button" data-v="scratch" aria-pressed="false">Scratch</button>
+          <button type="button" data-v="godot" aria-pressed="false">Godot</button>
+        </div>
+      </div>
+      <div class="fgroup"><span class="lab" id="l-eff">Effort</span>
+        <div class="seg" id="fEff" role="group" aria-labelledby="l-eff">
+          <button type="button" data-v="all" aria-pressed="true">Any</button>
+          <button type="button" data-v="low" aria-pressed="false">Very light to light</button>
+          <button type="button" data-v="mid" aria-pressed="false">Medium</button>
+          <button type="button" data-v="high" aria-pressed="false">Heavy and up</button>
+        </div>
+      </div>
+      <label class="check" for="fFav"><input type="checkbox" id="fFav"> Only matches for his favourite games</label>
+    </div>
+    <p class="count" id="count" role="status"></p>
+    <div class="grid" id="genreGrid"></div>
+  </section>
+
+  <section class="sec" id="mechanics" aria-labelledby="h-mech">
+    <div class="sec-head">
+      <h2 id="h-mech">Mechanics</h2>
+      <p>The building blocks inside every genre, easiest first. Each one shows how to do it in Scratch and in Godot, and which games use it.</p>
+    </div>
+    <div class="grid" id="mechGrid"></div>
+  </section>
+
+  <section class="sec" id="toolkit" aria-labelledby="h-tk">
+    <div class="sec-head">
+      <h2 id="h-tk">Design toolkit</h2>
+      <p>Game design is more than code. These habits are what separate a pile of features from a game people want to finish.</p>
+    </div>
+    <div id="tkBox"></div>
+  </section>
+
+  <section class="sec" id="plan" aria-labelledby="h-plan">
+    <div class="sec-head">
+      <h2 id="h-plan">My one-page plan</h2>
+      <p>Fill this in before opening Scratch or Godot. It saves in this browser as you type.</p>
+    </div>
+    <div class="plan">
+      <form class="form card" id="planForm" onsubmit="return false">
+        <div class="f2">
+          <div class="field"><label for="pGenre">Genre</label>
+            <select id="pGenre"></select></div>
+          <div class="field"><label for="pPlat">Built in</label>
+            <select id="pPlat"><option>Not sure yet</option><option>Scratch</option><option>Godot</option></select></div>
+        </div>
+        <div class="hint" id="planHint">Choose a genre to see the suggested first playable.</div>
+        <div class="field"><label for="pTitle">Working title</label>
+          <input id="pTitle" type="text" placeholder="Turbo Turnip Farm" autocomplete="off"></div>
+        <div class="field"><label for="pPitch">One-sentence pitch</label>
+          <input id="pPitch" type="text" placeholder="Grow weird vegetables and race them to market." autocomplete="off"></div>
+        <div class="field"><label for="pLoop">Core loop</label>
+          <textarea id="pLoop" placeholder="Plant seeds, water them, harvest, sell, buy better seeds."></textarea>
+          <span class="help">The thing the player repeats. Action, then result, then reward.</span></div>
+        <div class="field"><label for="pControls">Controls</label>
+          <input id="pControls" type="text" placeholder="Arrow keys to move, space to use a tool" autocomplete="off"></div>
+        <div class="field"><label for="pMust">Must have (one per line)</label>
+          <textarea id="pMust" placeholder="Move around&#10;Plant and harvest one crop&#10;Sell for coins"></textarea></div>
+        <div class="hint" id="mustHint">Aim for 3 to 5 must-haves.</div>
+        <div class="f2">
+          <div class="field"><label for="pNice">Nice to have</label>
+            <textarea id="pNice" placeholder="Weather&#10;A second crop"></textarea></div>
+          <div class="field"><label for="pCut">Cut for now</label>
+            <textarea id="pCut" placeholder="Villagers&#10;Saving"></textarea></div>
+        </div>
+        <div class="field"><label for="pArt">Art and sound style</label>
+          <input id="pArt" type="text" placeholder="3 colours, 16 pixel sprites, cheerful music" autocomplete="off"></div>
+        <div class="f2">
+          <div class="field"><label for="pDate">First playable by</label>
+            <input id="pDate" type="date"></div>
+          <div class="field"><label for="pTester">First playtester</label>
+            <input id="pTester" type="text" placeholder="A friend or sibling" autocomplete="off"></div>
+        </div>
+      </form>
+      <aside class="out card" aria-labelledby="h-out">
+        <h3 id="h-out">Plan as text</h3>
+        <pre id="planText"></pre>
+        <div class="actions">
+          <button class="btn" id="copyPlan" type="button">Copy plan</button>
+          <button class="btn ghost" id="clearPlan" type="button">Clear form</button>
+        </div>
+        <p class="msg" id="copyMsg" role="status"></p>
+      </aside>
+    </div>
+    <div class="cta">
+      <h3>Plan finished?</h3>
+      <p>Pick a genre and fill in the plan above, then get a step-by-step guide for building it. It uses your title, your must-haves and your cut list.</p>
+      <button class="btn" id="makeGuide" type="button">Finish plan and show my build guide</button>
+      <p class="msg" id="guideMsg" role="status"></p>
+    </div>
+  </section>
+
+  <section class="sec" id="guide" aria-labelledby="h-guide" hidden>
+    <div class="sec-head">
+      <h2 id="h-guide">Build guide</h2>
+      <p>Work through the steps in order and test after every step before moving on. Ticks are saved in this browser.</p>
+    </div>
+    <div id="guideBody"></div>
+    <p class="foot">Time ranges and effort ratings are estimates for a first playable version and will vary with how much art, sound and polish he wants. Godot guides are written for Godot 4.7. Numbers in the code, such as speeds and forces, are starting points to tune by feel.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var L=["","Very light","Light","Medium","Heavy","Very heavy"];
+var TS=["","an afternoon","a weekend","3 to 4 weekends","6 to 10 weekends","a term or more"];
+var TIMEFULL=["","2 to 4 hours","4 to 8 hours","15 to 20 hours","30 to 50 hours","60+ hours"];
+var PLABEL={scratch:"Scratch",godot:"Godot",either:"Scratch or Godot"};
+
+var MECH=[
+{id:"move",name:"Move & jump",effort:1,best:"either",what:"Arrow keys, gravity and a jump. He already has this from his platformer.",scratch:"A gravity variable that changes y, and a check for touching the ground.",godot:"CharacterBody2D with a velocity vector and move_and_slide()."},
+{id:"collide",name:"Collision & hit detection",effort:1,best:"either",what:"Knowing when two things touch and deciding what happens next.",scratch:"The touching block, or touching colour for track edges.",godot:"Area2D for pickups and hurt zones. Collision layers stop bullets hitting the shooter."},
+{id:"score",name:"Score, lives & game over",effort:1,best:"either",what:"The numbers a player cares about, plus the end screen.",scratch:"Variables, and a broadcast message for game over.",godot:"A variable in an Autoload script, and signals that update the label."},
+{id:"timer",name:"Timers & cooldowns",effort:1,best:"either",what:"Countdowns, spell cooldowns and waves that start on a beat.",scratch:"The timer reporter and wait blocks.",godot:"A Timer node. Connect its timeout signal."},
+{id:"juice",name:"Game feel (juice)",effort:2,best:"either",what:"Small effects that make every action feel good: shake, sparks, squash and sound.",scratch:"A sound on every hit, a quick size change, a brief colour flash.",godot:"Camera shake with a Tween, CPUParticles2D bursts, an AudioStreamPlayer on each action."},
+{id:"spawn",name:"Spawning",effort:2,best:"either",what:"Making many copies of an enemy, bullet or coin while the game runs.",scratch:"Create clone of myself, and delete this clone when it leaves the screen.",godot:"Save the thing as its own scene, then instantiate() it and add_child()."},
+{id:"scroll",name:"Scrolling camera",effort:2,best:"either",what:"A world bigger than the screen.",scratch:"Keep the player centred and move everything else the opposite way.",godot:"Add a Camera2D to the player and set limits at the level edges."},
+{id:"health",name:"Health & damage",effort:2,best:"either",what:"Hit points, taking damage, a moment of invincibility, and knockback.",scratch:"A health variable, and a short wait before the next hit counts.",godot:"A health variable with a take_damage() function, and a Timer for invincibility."},
+{id:"ai",name:"Enemy AI",effort:3,best:"godot",what:"Enemies that patrol, notice you, chase and give up.",scratch:"If distance to the player is small, point towards them and move.",godot:"A tiny state machine: an enum of states and a match statement each frame."},
+{id:"waypoints",name:"Waypoints & paths",effort:3,best:"godot",what:"Things that follow a route, like racers or tower-defence enemies.",scratch:"A list of x and y points, and glide to each one in turn.",godot:"A Path2D with a PathFollow2D whose progress grows each frame."},
+{id:"grid",name:"Grid & tile logic",effort:3,best:"either",what:"Worlds and puzzles made of squares.",scratch:"A list used as a grid, turning x and y into a list position.",godot:"TileMapLayer paints and reads tiles."},
+{id:"inv",name:"Inventory & items",effort:3,best:"either",what:"Collecting, carrying and using things.",scratch:"A list of item names with add, delete and contains checks.",godot:"An array of items. Make each item a Resource with a name, icon and value."},
+{id:"rigid",name:"Physics bodies",effort:3,best:"godot",what:"Things that tumble, roll and bounce on their own.",scratch:"Scratch has no physics engine, so it has to be faked with speed variables.",godot:"RigidBody2D handles gravity, bounce and friction for you."},
+{id:"econ",name:"Economy & upgrades",effort:3,best:"either",what:"Earning, spending and upgrades that get more expensive.",scratch:"Variables for coins and cost, with the cost rising after each purchase.",godot:"The same maths with Buttons and Labels for a proper shop screen. Check the balance in a spreadsheet."},
+{id:"dialog",name:"Dialogue & quests",effort:3,best:"either",what:"Talking to characters and tracking what is done.",scratch:"The ask and say blocks, with variables as quest flags.",godot:"Lines stored in a Dictionary or Resource and shown in a Label, with flags for progress."},
+{id:"time",name:"Day, night & calendar",effort:3,best:"godot",what:"A clock, days passing, morning and night.",scratch:"A variable that counts up, and a backdrop switch at set values.",godot:"A Timer ticks the clock, and a CanvasModulate node tints the whole scene for dusk."},
+{id:"save",name:"Save & load",effort:3,best:"godot",what:"Remembering progress after the game closes.",scratch:"Hard. Scratch only remembers between plays with cloud variables, which are limited.",godot:"Write a Dictionary to a JSON file with FileAccess in user://, and read it back on start."},
+{id:"rhythm",name:"Rhythm timing windows",effort:3,best:"either",what:"Notes that fall to a beat, and a window where a press counts.",scratch:"Spawn notes on a timer and check for a key press while a note is near the line.",godot:"Compare each note's time to the song's get_playback_position() for tighter timing."},
+{id:"drift",name:"Drift & momentum",effort:4,best:"godot",what:"Speed, turning and sliding that feel like a vehicle.",scratch:"Possible with direction and speed variables, but it feels floaty.",godot:"Keep a velocity vector, steer by rotating, cut sideways speed with friction, then tune the numbers."},
+{id:"procgen",name:"Procedural generation",effort:4,best:"godot",what:"Levels that are different every run.",scratch:"Picking random pre-drawn rooms from a list is the easy version.",godot:"Pick and join room scenes with randi(). Use FastNoiseLite for caves and a seed to replay a level."},
+{id:"ability",name:"Spells & abilities as data",effort:4,best:"godot",what:"Spells and moves defined as data instead of code.",scratch:"One list per spell holding name, damage and cooldown.",godot:"A custom Resource script with damage, cooldown and icon, then one .tres file per spell."},
+{id:"pathfind",name:"Pathfinding",effort:4,best:"godot",what:"Units that find a route around walls.",scratch:"Hard to do well. Chase-the-player AI with simple obstacles is the practical limit.",godot:"A NavigationRegion2D, with a NavigationAgent2D on each unit."},
+{id:"slopes",name:"Slopes & loops",effort:5,best:"godot",what:"Running up ramps, keeping speed, and looping the loop.",scratch:"Not realistic. Stick to flat levels with jumps.",godot:"CharacterBody2D handles slopes, but keeping speed and building loops needs custom code and lots of testing."}
+];
+
+var GEN=[
+{id:"arcade",name:"Arcade classic remake",insp:"Pong, Breakout, Snake",pitch:"Rebuild a classic in an afternoon, then add one twist of his own.",platform:"scratch",effort:1,mech:["collide","score","juice","move"],slice:"A ball that bounces off a paddle you can move.",learn:"Finishing a whole game, start to end.",note:"The fastest win on this page. Do one first to build momentum."},
+{id:"runner",name:"Endless runner",insp:"Sonic-style auto-run, Subway Surfers",pitch:"The hero runs on its own. You dodge, jump and collect while the speed creeps up.",platform:"scratch",effort:2,mech:["scroll","spawn","score","juice"],slice:"One lane of obstacles that gets faster the longer you survive.",learn:"Spawning, scrolling and high scores.",note:"Reuses what he learned in his platformer."},
+{id:"cyoa",name:"Choose-your-own adventure",insp:"Text adventures, visual novels",pitch:"A branching story where your choices change the ending.",platform:"scratch",effort:2,mech:["dialog","inv"],slice:"Three scenes and one choice that changes how it ends.",learn:"Branching plots and tracking choices with variables.",note:"Pairs well with his story planning. The writing is most of the work."},
+{id:"clicker",name:"Tycoon or idle clicker",insp:"Cookie Clicker, cafe tycoons",pitch:"Earn coins, buy upgrades and watch the numbers climb.",platform:"scratch",effort:2,mech:["econ","score","timer"],slice:"Click to earn coins and buy one upgrade.",learn:"Economy maths and how costs scale.",note:"Moves to Godot if he wants it to remember progress between plays."},
+{id:"shooter",name:"Top-down shooter",insp:"Twin-stick shooters, Space Invaders",pitch:"Move, aim and survive waves of enemies.",platform:"either",effort:2,mech:["spawn","collide","health","ai"],slice:"A ship that fires bullets, and one enemy that dies when hit.",learn:"Spawning, collision and wave difficulty.",note:"Scratch clones work fine. Godot is cleaner once there are lots of bullets and waves."},
+{id:"puzzle",name:"Grid puzzle",insp:"Sokoban, sliding tiles, match-3",pitch:"Push, slide or swap things on a grid to solve each level.",platform:"scratch",effort:3,mech:["grid","move","score"],slice:"One level where you push a box onto a target.",learn:"Grid logic, undo, and designing levels that teach.",note:"Great logic practice. Match-3 is far harder than Sokoban, so start with Sokoban."},
+{id:"rhythm",name:"Rhythm game",insp:"Guitar Hero, Beat Saber",pitch:"Notes fall in time to a song and you hit them on the beat.",platform:"either",effort:3,mech:["rhythm","timer","score","juice"],slice:"One 30-second song with four lanes of notes.",learn:"Timing windows and syncing to audio.",note:"Scratch drifts out of sync a little. Godot can read the song's position for tighter timing."},
+{id:"kart",name:"Top-down kart racer",insp:"Mario Kart",fav:true,pitch:"Race laps with drifting, boost pads and item boxes against a few AI racers.",platform:"godot",effort:3,mech:["drift","waypoints","ai","timer","scroll"],slice:"One track, one kart and a lap counter.",learn:"Vector movement, waypoints and tuning how a game feels.",note:"A Scratch version that senses colour for the track edge is Light but floaty."},
+{id:"wtc",name:"Shape-shifting physics puzzler",insp:"What the Car?",fav:true,pitch:"Reach the goal, but your vehicle keeps turning into something ridiculous.",platform:"godot",effort:3,mech:["rigid","collide","juice"],slice:"A car, a flag and one transformation that solves the level.",learn:"Physics bodies, swapping scenes and funny level design.",note:"Most of the effort goes into ideas for levels, not code."},
+{id:"adventure",name:"Top-down adventure",insp:"Zelda, Pokémon",pitch:"Explore rooms, find keys, fight small enemies and open doors.",platform:"godot",effort:3,mech:["grid","ai","health","inv","dialog"],slice:"Walk between two rooms and open one locked door.",learn:"Tilemaps, switching scenes and simple enemy AI.",note:"A gentle first step into how Godot scenes fit together."},
+{id:"td",name:"Tower defence",insp:"Bloons, Plants vs Zombies",pitch:"Place towers to stop waves of enemies walking a path.",platform:"godot",effort:3,mech:["waypoints","spawn","timer","econ","ai"],slice:"One enemy walks a path and one tower shoots it.",learn:"Targeting, waves and balancing an economy.",note:"Systems that interact make this a good design lesson."},
+{id:"sonic",name:"Momentum platformer",insp:"Sonic",fav:true,pitch:"Build speed, hit ramps and keep your momentum.",platform:"godot",effort:4,mech:["move","drift","slopes","scroll","juice"],slice:"Run down a ramp and jump farther because of the speed.",learn:"Acceleration, friction and camera follow.",note:"Builds on his platformer. Slopes and loops are the hard part, so ship without loops first."},
+{id:"farm",name:"Farming and life sim",insp:"Stardew Valley",fav:true,pitch:"Plant, water, harvest and sell, one day at a time.",platform:"godot",effort:4,mech:["grid","time","inv","save","econ","dialog"],slice:"Plant one crop, wait one day, harvest it and sell it.",learn:"Tilemaps, inventory, a day clock and saving.",note:"Open-ended, so it can grow for months. Leave the town and villagers until the farm works."},
+{id:"rogue",name:"Roguelike dungeon",insp:"Binding of Isaac, Dead Cells",pitch:"Fight through randomly built rooms. If you lose, you start again.",platform:"godot",effort:4,mech:["procgen","ai","health","inv","spawn"],slice:"Three connected rooms picked at random each run.",learn:"Procedural generation and randomised loot.",note:"A simple room shuffler gives the big aha moment. Full map generation can wait."},
+{id:"rpg",name:"Turn-based RPG or card battler",insp:"Pokémon battles, Slay the Spire",pitch:"Take turns choosing moves, using items and beating bosses.",platform:"godot",effort:4,mech:["ability","health","inv","dialog"],slice:"One fight with two moves each and a winner.",learn:"Stats, menus and data-driven design.",note:"Menus take time. Godot Resources make new moves and cards easy to add."},
+{id:"magic",name:"Magic school action game",insp:"Hogwarts Legacy",fav:true,pitch:"Learn spells, explore a castle courtyard and take on small duels.",platform:"godot",effort:4,mech:["ability","timer","ai","dialog","health"],slice:"One spell with a cooldown that defeats one enemy.",learn:"Abilities as data, cooldowns and quests.",note:"Keep it top-down and in one courtyard. The whole castle can be the sequel."},
+{id:"three",name:"3D collect-a-thon",insp:"Super Mario 64, Crash Bandicoot",pitch:"Run and jump around a small 3D island collecting stars.",platform:"godot",effort:4,mech:["move","collide","score"],slice:"Run around a flat island and collect five coins.",learn:"3D space, cameras and lighting.",note:"New ideas everywhere. Start from one of Godot's 3D demo projects."},
+{id:"metroid",name:"Metroidvania",insp:"Hollow Knight, Metroid",pitch:"One connected map where each new ability unlocks new places.",platform:"godot",effort:5,mech:["move","ai","save","scroll","inv"],slice:"One locked door and one power-up that opens it.",learn:"Map design and gating progress.",note:"Very large. The first playable slice is the whole point."},
+{id:"rts",name:"Real-time strategy lite",insp:"Age of Empires, Clash of Clans",pitch:"Gather resources, train units and send them to fight.",platform:"godot",effort:5,mech:["pathfind","ai","econ","spawn"],slice:"Select one unit and click to send it around a wall.",learn:"Selection, pathfinding and AI opponents.",note:"A big stretch goal. Save it for after he has finished two other games."}
+];
+
+var TOOLKIT=[
+{group:"Before you build",items:[
+ {t:"Core loop",d:"The thing the player does again and again. In Stardew it is plant, water, harvest, sell, buy seeds.",q:"What will the player do 100 times, and why is it still fun on the 100th?"},
+ {t:"Goal and fail state",d:"Say how a player wins and how they lose or get set back. Without both, nothing is at stake.",q:"How does a player know they are doing well?"},
+ {t:"Scope in four buckets",d:"Sort every idea into Must have, Should have, Could have or Won't have this time. Build in that order.",q:"If I only had one weekend, what would I keep?"},
+ {t:"Progression and rewards",d:"Give rewards at three speeds: a coin in seconds, an upgrade in minutes, a big unlock in hours.",q:"What is the player working towards right now?"},
+ {t:"One-page plan",d:"Put the title, pitch, controls, core loop and must-haves on a single page. The planner below does exactly this.",q:"Could a friend explain my game after reading this?"}
+]},
+{group:"While you build",items:[
+ {t:"First playable slice",d:"Finish one small piece, such as a room or a single day, with art and sound before building more.",q:"Is this tiny piece already fun?"},
+ {t:"Game feel",d:"Sound, screen shake, particles and a little squash on every action make simple games feel great.",q:"What happens on screen and in sound when I jump, hit or collect?"},
+ {t:"Teach, test, twist",d:"The Mario level pattern. Introduce a mechanic safely, make the player use it, then add a twist.",q:"Does each level introduce just one new idea?"},
+ {t:"Art, sound and theme",d:"Pick two or three colours and one sprite size and stick to them. Free packs from <a href=\"https://kenney.nl\" target=\"_blank\" rel=\"noopener\">kenney.nl</a> keep the art consistent.",q:"Do all my pieces look like they belong together?"},
+ {t:"Keep versions",d:"Save a numbered copy before a big change. In Scratch use Save as a copy. In Godot copy the project folder, or learn Git later.",q:"If this change breaks everything, can I go back?"}
+]},
+{group:"After it works",items:[
+ {t:"Playtesting",d:"Hand it to someone, stay quiet and watch. Where they get stuck or laugh is the feedback.",q:"What did they try that I did not expect?"},
+ {t:"Game jams",d:"A deadline plus a theme teaches finishing. <a href=\"https://itch.io/jams\" target=\"_blank\" rel=\"noopener\">itch.io/jams</a> lists online jams, and a family one-weekend jam works too.",q:"What can I cut to finish on time?"}
+]}
+];
+
+var GODOT_SETUP=[
+ "Install Godot 4.7 from godotengine.org. Choose the standard version, not the .NET one, because you will write GDScript.",
+ "Open Godot and click New Project. Give it a name, pick a folder, and click Create.",
+ "In the FileSystem panel (bottom left), right-click and make folders called scenes and scripts. Keep scenes in one and code in the other.",
+ "Placeholder art is fine. The Godot icon (icon.svg) is a good stand-in for any character until you have real sprites."
+];
+var SCRATCH_SETUP=[
+ "Open scratch.mit.edu and click Create. Sign in if you want to save your project online.",
+ "Give the project a name at the top of the editor.",
+ "Delete the cat sprite. You will paint your own sprites, which is quicker than it sounds."
+];
+
+var GUIDES={
+arcade:{tool:"Scratch",setup:SCRATCH_SETUP.concat(["Make two variables for all sprites: Score and Lives (Variables, then Make a Variable). Tick both boxes so they show on the stage."]),
+stretch:["Change how the ball leaves the paddle: use the distance between the ball and the middle of the paddle to pick the new angle.","Make power-up bricks that drop a falling clone. Catch it to grow the paddle for 10 seconds.","Build a second level with a different brick layout.","Add a High Score variable.","Add a title screen backdrop with a Start button."],
+steps:[
+{t:"Make the paddle move",goal:"A paddle that slides left and right with your mouse.",do:["Click the paint icon to make a new sprite. Draw a wide, flat rectangle and rename the sprite Paddle.","Open the Code tab and build the script below.","Click the green flag and move your mouse."],
+code:[{lang:"Scratch blocks",file:"Paddle sprite",text:`when green flag clicked
+go to x: (0) y: (-150)
+forever
+  set x to (mouse x)`}],test:"The paddle follows your mouse and stays near the bottom of the stage."},
+{t:"Add a ball that bounces off the walls",goal:"A ball that moves on its own and bounces around the stage.",do:["Paint a small circle and rename the sprite Ball.","Build the script below. Direction 0 is up, 90 is right and 180 is down, so 45 heads up and to the right.","Click the green flag."],
+code:[{lang:"Scratch blocks",file:"Ball sprite",text:`when green flag clicked
+go to x: (0) y: (0)
+point in direction (45)
+forever
+  move (6) steps
+  if on edge, bounce`}],test:"The ball bounces off the left, right and top edges. It bounces off the bottom too for now. Step 4 fixes that."},
+{t:"Bounce off the paddle",goal:"The ball flips direction when it hits the paddle.",why:"Subtracting a direction from 180 flips up and down. It is the same maths as a mirror reflection.",do:["In the Ball script, add the new if block inside the forever loop, under the bounce block.","The move block after the flip stops the ball getting stuck inside the paddle."],
+code:[{lang:"Scratch blocks",file:"Ball sprite (inside the forever loop)",text:`  if <touching (Paddle)?> then
+    point in direction ((180) - (direction))
+    move (10) steps`}],test:"The ball bounces up off the paddle every time. If it sticks, raise the move steps from 10 to 15."},
+{t:"Lose a life at the bottom",goal:"Missing the ball costs a life, and zero lives ends the game.",do:["Paint a new sprite: a thin red rectangle as wide as the stage. Rename it Floor.","Drag Floor to the very bottom of the stage, so the ball touches it just before it reaches the edge.","Replace the Ball script with the one below. The new part sets Score and Lives at the start and handles the floor."],
+code:[{lang:"Scratch blocks",file:"Ball sprite (replace the old script)",text:`when green flag clicked
+set [Score] to (0)
+set [Lives] to (3)
+go to x: (0) y: (0)
+point in direction (45)
+forever
+  move (6) steps
+  if on edge, bounce
+  if <touching (Paddle)?> then
+    point in direction ((180) - (direction))
+    move (10) steps
+  if <touching (Floor)?> then
+    change [Lives] by (-1)
+    go to x: (0) y: (0)
+    point in direction (pick random (150) to (210))
+    wait (1) seconds
+    if <(Lives) < (1)> then
+      say [Game over] for (2) seconds
+      stop [all]`}],test:"Let the ball fall three times. The Lives number counts down, then Game over appears and everything stops."},
+{t:"Build the bricks with clones",goal:"Rows of bricks that disappear when the ball hits them, with a score.",why:"A clone is a temporary copy of a sprite. One brick sprite can make 24 bricks.",do:["Paint a small rectangle, about 40 wide and 20 high, and rename the sprite Brick.","Build both Brick scripts below.","Add the second Ball script. The brick tells the ball to bounce by sending a message called bounce.","To make the message, open the Code tab for any sprite, use Events, then broadcast, then New message."],
+code:[{lang:"Scratch blocks",file:"Brick sprite, script 1 (makes the grid)",text:`when green flag clicked
+hide
+go to x: (-200) y: (150)
+repeat (3)
+  repeat (8)
+    create clone of [myself]
+    change x by (55)
+  set x to (-200)
+  change y by (-30)`},{lang:"Scratch blocks",file:"Brick sprite, script 2 (what each clone does)",text:`when I start as a clone
+show
+forever
+  if <touching (Ball)?> then
+    change [Score] by (1)
+    broadcast [bounce]
+    delete this clone`},{lang:"Scratch blocks",file:"Ball sprite, new separate script",text:`when I receive [bounce]
+point in direction ((180) - (direction))`}],test:"24 bricks appear in 3 rows. Each one vanishes when hit, Score goes up by 1, and the ball bounces."},
+{t:"Win the game",goal:"Clearing every brick shows a win message.",do:["The grid has 3 rows of 8, so the winning score is 24.","Add this block inside the Ball forever loop, at the bottom."],
+code:[{lang:"Scratch blocks",file:"Ball sprite (inside the forever loop)",text:`  if <(Score) = (24)> then
+    say [You win!] for (2) seconds
+    stop [all]`}],test:"Clear all the bricks and You win appears. If it never shows, check that your Score variable counts to exactly 24."},
+{t:"Make it feel good",goal:"Sound and a ball that speeds up as you clear bricks.",why:"Small effects like these are called game feel, or juice. They make a simple game feel finished.",do:["Make a variable called Speed. In the Ball green flag script, add set Speed to 6 near the top, and change move (6) steps to move (Speed) steps.","In the Ball script that starts with when I receive bounce, add change Speed by 0.2.","Add a start sound block (pick any pop or bump sound) when the ball touches the paddle and when a brick breaks."],
+code:[],test:"The ball gets noticeably faster as the bricks disappear, and every hit makes a noise."},
+{t:"Add your own twist",goal:"One feature that makes this game yours.",do:["Open your plan and look at your pitch and must-haves.","Pick one twist: moving bricks, a second ball, a power-up, a boss brick that takes 3 hits.","Add it, test it, then give the game to your first playtester."],
+code:[],test:"Someone else can play from start to finish without you explaining the rules."}
+]},
+
+clicker:{tool:"Scratch",setup:SCRATCH_SETUP.concat(["Make these variables for all sprites: Coins, PerClick, UpgradeCost, PerSecond and HelperCost. Tick the boxes for Coins, PerClick and UpgradeCost so they show on the stage."]),
+stretch:["A golden coin clone that appears every 30 to 60 seconds. Click it for a big bonus.","Prestige: reset everything for a permanent bonus.","More upgrade types with their own sprites and costs.","A backdrop that changes as you reach milestones.","Background music with a mute button."],
+steps:[
+{t:"Click to earn coins",goal:"A big button that adds coins every time you click it.",do:["Paint a large coin or cookie and rename the sprite Button.","Build both scripts below.","Click the green flag, then click your button."],
+code:[{lang:"Scratch blocks",file:"Button sprite",text:`when green flag clicked
+set [Coins] to (0)
+set [PerClick] to (1)
+set [UpgradeCost] to (10)
+set [PerSecond] to (0)
+set [HelperCost] to (50)
+
+when this sprite clicked
+change [Coins] by (PerClick)`}],test:"Coins goes up by one each click."},
+{t:"Make clicking feel good",goal:"Each click gives a sound and a little squash.",why:"Games like this are all about feedback. The number alone is boring, so the button has to react.",do:["Add these blocks to the end of the when this sprite clicked script."],
+code:[{lang:"Scratch blocks",file:"Button sprite (add to the end of the click script)",text:`  start sound [pop]
+  change size by (10)
+  wait (0.05) seconds
+  change size by (-10)`}],test:"The button pops and makes a sound on every click."},
+{t:"Add the first upgrade",goal:"A button that spends coins to make each click worth more.",why:"Multiplying the cost by 1.5 each time makes upgrades get more expensive. That is what keeps the game going.",do:["Paint a new sprite that looks like a shop button and rename it Upgrade.","Build the script below.","Tick the UpgradeCost box so you can see the price."],
+code:[{lang:"Scratch blocks",file:"Upgrade sprite",text:`when this sprite clicked
+if <not <(Coins) < (UpgradeCost)>> then
+  change [Coins] by ((0) - (UpgradeCost))
+  change [PerClick] by (1)
+  set [UpgradeCost] to (round ((UpgradeCost) * (1.5)))
+else
+  say (join [Need ] (UpgradeCost)) for (1) seconds`}],test:"Click up to 10 coins, then click Upgrade. Coins drop by 10, each click now gives 2, and the cost rises to 15."},
+{t:"Add helpers that earn for you",goal:"Coins that arrive every second without clicking.",do:["Paint another shop button and rename it Helper.","Build the Helper script.","In the Button sprite, add the loop script below as a separate script."],
+code:[{lang:"Scratch blocks",file:"Helper sprite",text:`when this sprite clicked
+if <not <(Coins) < (HelperCost)>> then
+  change [Coins] by ((0) - (HelperCost))
+  change [PerSecond] by (1)
+  set [HelperCost] to (round ((HelperCost) * (1.4)))
+else
+  say (join [Need ] (HelperCost)) for (1) seconds`},{lang:"Scratch blocks",file:"Button sprite, new separate script",text:`when green flag clicked
+forever
+  wait (1) seconds
+  change [Coins] by (PerSecond)`}],test:"Buy a helper and watch Coins climb by itself each second."},
+{t:"Balance the numbers",goal:"A game where something new is always just out of reach.",why:"This step is the real game design. The code is done, and the numbers decide whether it is fun.",do:["Play for five minutes without stopping.","Aim for the first upgrade within about 15 seconds, and a new thing to buy every 30 to 60 seconds after that.","If it gets boring, make costs rise more slowly (change 1.5 to 1.3). If it gets too easy, make them rise faster.","Write down your numbers on paper so you can compare versions."],
+code:[],test:"A friend plays for five minutes and wants to keep going."},
+{t:"Add a goal and an ending",goal:"A target to reach and a message when you get there.",do:["Pick a goal, such as 1000 coins.","Add the script below to the Button sprite.","Optional: paint a second backdrop for the ending."],
+code:[{lang:"Scratch blocks",file:"Button sprite, new separate script",text:`when green flag clicked
+wait until <(Coins) > (999)>
+say [You built an empire!] for (3) seconds
+stop [all]`}],test:"Reaching 1000 coins shows the message and stops the game."}
+]},
+
+farm:{tool:"Godot",setup:GODOT_SETUP,
+stretch:["A second crop with a different growth time and price. Keep each crop as a Dictionary of name, days and price.","A night tint with a CanvasModulate node that darkens as the day clock runs.","An energy bar that drops when you plant or harvest.","Seeds you buy from a shop.","A villager with a few lines of dialogue.","Saving which plots are planted."],
+steps:[
+{t:"Walk around",goal:"A square you can steer with the arrow keys.",do:["In the Scene panel click Other Node, choose CharacterBody2D, and rename it Player.","Add a Sprite2D child. Drag res://icon.svg into its Texture slot and set Scale to 0.25 and 0.25.","Add a CollisionShape2D child. In Shape choose New RectangleShape2D and make it 24 by 24.","Click Player. In the Inspector set Motion Mode to Floating. This turns off the platformer behaviour, which a top-down game does not want.","Add a Camera2D child of Player and set its Zoom to 2 and 2.","Save as scenes/player.tscn. Right-click Player, choose Attach Script, save it as scripts/player.gd, and paste the code.","Make a new scene with a Node2D root named World and save it as scenes/world.tscn. Drag player.tscn into it, then press F6 to run the scene."],
+code:[{lang:"GDScript",file:"scripts/player.gd",text:`extends CharacterBody2D
+
+const SPEED := 120.0
+
+func _physics_process(_delta: float) -> void:
+	var dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	velocity = dir * SPEED
+	move_and_slide()`}],test:"The arrow keys move the square in every direction, and the camera follows it."},
+{t:"Plant and harvest",goal:"Soil plots you can plant in, wait for, and harvest.",why:"This is the core loop of your game. A plot has three states: empty, planted and ready.",do:["Project, then Project Settings, then Input Map. Type interact in the box, click Add, click the pencil or plus next to it, press the E key and click OK.","Make a new scene with an Area2D root named Plot. Add a ColorRect child, set its Size to 30 by 30, and set its Position to -15, -15.","Add a CollisionShape2D to Plot with a New RectangleShape2D of 30 by 30. Leave it at position 0, 0.","Attach scripts/plot.gd to Plot, paste the first code block, and save the scene as scenes/plot.tscn.","Open player.tscn. Add an Area2D child named Reach, with a CollisionShape2D that holds a New CircleShape2D of radius 24.","Replace the code in player.gd with the second code block. It finds the nearest thing in reach when you press E.","Open world.tscn, attach a new script scripts/world.gd to World, and paste the third code block. It builds 15 plots when the game starts."],
+code:[{lang:"GDScript",file:"scripts/plot.gd",text:`extends Area2D
+
+enum State { EMPTY, PLANTED, READY }
+
+@onready var rect: ColorRect = $ColorRect
+
+var state: State = State.EMPTY
+
+func _ready() -> void:
+	add_to_group("interactables")
+	_update_color()
+
+func interact() -> void:
+	match state:
+		State.EMPTY:
+			state = State.PLANTED
+			get_tree().create_timer(5.0).timeout.connect(_on_grown)
+		State.READY:
+			state = State.EMPTY
+			print("Harvested a crop!")
+	_update_color()
+
+func _on_grown() -> void:
+	state = State.READY
+	_update_color()
+
+func _update_color() -> void:
+	match state:
+		State.EMPTY:
+			rect.color = Color("6b4423")
+		State.PLANTED:
+			rect.color = Color("4caf50")
+		State.READY:
+			rect.color = Color("ffd23f")`},{lang:"GDScript",file:"scripts/player.gd (replace)",text:`extends CharacterBody2D
+
+const SPEED := 120.0
+
+@onready var reach: Area2D = $Reach
+
+func _physics_process(_delta: float) -> void:
+	var dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	velocity = dir * SPEED
+	move_and_slide()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("interact"):
+		var closest: Node2D = null
+		var best := INF
+		for area in reach.get_overlapping_areas():
+			if area.is_in_group("interactables"):
+				var d := global_position.distance_to(area.global_position)
+				if d < best:
+					best = d
+					closest = area
+		if closest:
+			closest.interact()`},{lang:"GDScript",file:"scripts/world.gd",text:`extends Node2D
+
+const PLOT_SCENE := preload("res://scenes/plot.tscn")
+const COLS := 5
+const ROWS := 3
+const CELL := 36
+
+func _ready() -> void:
+	for y in ROWS:
+		for x in COLS:
+			var plot := PLOT_SCENE.instantiate()
+			plot.position = Vector2(100 + x * CELL, 80 + y * CELL)
+			add_child(plot)`}],test:"Walk onto a plot and press E: it turns green. After 5 seconds it turns gold. Press E again: it turns brown and the Output panel prints Harvested a crop! If nothing happens, check that Reach and Plot both use Collision Layer 1 and Mask 1, which are the defaults."},
+{t:"Count crops and sell them",goal:"Harvested crops go into a counter, and you sell them for coins.",why:"An Autoload is a script that is always running and any other script can reach by name. It is a good home for numbers the whole game shares.",do:["Create scripts/game.gd (right-click scripts, then New Script) and paste the first code block.","Project, then Project Settings, then Globals, then Autoload. Pick scripts/game.gd, set the name to Game, and click Add.","In plot.gd, change the READY branch of interact() to the second code block, so a harvest adds a crop.","Make a new scene with an Area2D root named ShippingBin. Add a ColorRect (40 by 40, position -20, -20, a blue colour) and a CollisionShape2D (40 by 40). Attach scripts/shipping_bin.gd (third code block) and save it as scenes/shipping_bin.tscn. Drag it into World at about X 40, Y 110.","Make a new scene with a CanvasLayer root named HUD and a Label child. Under Theme Overrides, Font Sizes, set Font Size to 24. Attach scripts/hud.gd (fourth code block), save as scenes/hud.tscn and drag it into World."],
+code:[{lang:"GDScript",file:"scripts/game.gd",text:`extends Node
+
+signal changed
+
+const CROP_PRICE := 5
+
+var crops := 0
+var coins := 0
+
+func add_crop() -> void:
+	crops += 1
+	changed.emit()
+
+func sell_all() -> void:
+	coins += crops * CROP_PRICE
+	crops = 0
+	changed.emit()`},{lang:"GDScript",file:"scripts/plot.gd (change this part of interact)",text:`		State.READY:
+			state = State.EMPTY
+			Game.add_crop()`},{lang:"GDScript",file:"scripts/shipping_bin.gd",text:`extends Area2D
+
+func _ready() -> void:
+	add_to_group("interactables")
+
+func interact() -> void:
+	Game.sell_all()`},{lang:"GDScript",file:"scripts/hud.gd",text:`extends CanvasLayer
+
+@onready var label: Label = $Label
+
+func _ready() -> void:
+	Game.changed.connect(_refresh)
+	_refresh()
+
+func _refresh() -> void:
+	label.text = "Crops: %d   Coins: %d" % [Game.crops, Game.coins]`}],test:"Harvest three plots, walk to the blue box and press E. Coins go up by 5 per crop and Crops goes back to 0."},
+{t:"Add days that pass",goal:"Crops grow over game days instead of a 5-second timer.",why:"A day clock is the heartbeat of a life sim. Plots listen for a new_day signal instead of running their own timer.",do:["Replace game.gd with the first code block. It adds a day counter that ticks every 20 seconds.","Replace plot.gd with the second code block. A planted crop now needs 2 days.","In hud.gd, change the label line inside _refresh() to the third code block so the day is shown."],
+code:[{lang:"GDScript",file:"scripts/game.gd (replace)",text:`extends Node
+
+signal changed
+signal new_day
+
+const CROP_PRICE := 5
+const DAY_LENGTH := 20.0
+
+var crops := 0
+var coins := 0
+var day := 1
+
+func _ready() -> void:
+	var clock := Timer.new()
+	clock.wait_time = DAY_LENGTH
+	clock.autostart = true
+	clock.timeout.connect(_next_day)
+	add_child(clock)
+
+func add_crop() -> void:
+	crops += 1
+	changed.emit()
+
+func sell_all() -> void:
+	coins += crops * CROP_PRICE
+	crops = 0
+	changed.emit()
+
+func _next_day() -> void:
+	day += 1
+	new_day.emit()
+	changed.emit()`},{lang:"GDScript",file:"scripts/plot.gd (replace)",text:`extends Area2D
+
+enum State { EMPTY, PLANTED, READY }
+
+const DAYS_TO_GROW := 2
+
+@onready var rect: ColorRect = $ColorRect
+
+var state: State = State.EMPTY
+var days_left := 0
+
+func _ready() -> void:
+	add_to_group("interactables")
+	Game.new_day.connect(_on_new_day)
+	_update_color()
+
+func interact() -> void:
+	match state:
+		State.EMPTY:
+			state = State.PLANTED
+			days_left = DAYS_TO_GROW
+		State.READY:
+			state = State.EMPTY
+			Game.add_crop()
+	_update_color()
+
+func _on_new_day() -> void:
+	if state == State.PLANTED:
+		days_left -= 1
+		if days_left <= 0:
+			state = State.READY
+			_update_color()
+
+func _update_color() -> void:
+	match state:
+		State.EMPTY:
+			rect.color = Color("6b4423")
+		State.PLANTED:
+			rect.color = Color("4caf50")
+		State.READY:
+			rect.color = Color("ffd23f")`},{lang:"GDScript",file:"scripts/hud.gd (change this line)",text:`	label.text = "Day %d   Crops: %d   Coins: %d" % [Game.day, Game.crops, Game.coins]`}],test:"The day counter rises every 20 seconds. A crop turns gold after two day changes. To test faster, set DAY_LENGTH to 5 and put it back later."},
+{t:"Save your game",goal:"Coins, crops and the day are still there after you close the game.",do:["Replace game.gd with the code below. It saves every time a day passes or you sell, and loads when the game starts.","Run the game, sell some crops, close it, and run it again."],
+code:[{lang:"GDScript",file:"scripts/game.gd (replace)",text:`extends Node
+
+signal changed
+signal new_day
+
+const CROP_PRICE := 5
+const DAY_LENGTH := 20.0
+const SAVE_PATH := "user://farm.save"
+
+var crops := 0
+var coins := 0
+var day := 1
+
+func _ready() -> void:
+	load_game()
+	var clock := Timer.new()
+	clock.wait_time = DAY_LENGTH
+	clock.autostart = true
+	clock.timeout.connect(_next_day)
+	add_child(clock)
+
+func add_crop() -> void:
+	crops += 1
+	changed.emit()
+
+func sell_all() -> void:
+	coins += crops * CROP_PRICE
+	crops = 0
+	changed.emit()
+	save_game()
+
+func _next_day() -> void:
+	day += 1
+	new_day.emit()
+	changed.emit()
+	save_game()
+
+func save_game() -> void:
+	var data := {"coins": coins, "crops": crops, "day": day}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	file.store_string(JSON.stringify(data))
+
+func load_game() -> void:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	if data is Dictionary:
+		coins = int(data.get("coins", 0))
+		crops = int(data.get("crops", 0))
+		day = int(data.get("day", 1))`}],test:"Coins and the day come back after a restart. To start fresh, use Project, then Open User Data Folder, and delete farm.save. Saving which plots are planted is a good challenge for later."},
+{t:"Swap in real art",goal:"A painted field and proper crop pictures instead of coloured squares.",do:["Download a free 16 by 16 tileset or farm pack from kenney.nl and drag the PNG files into the FileSystem panel.","In world.tscn add a TileMapLayer node and drag it above the plots in the Scene list so it draws first.","In the Inspector, set Tile Set to New TileSet and set Tile Size to 16 by 16.","Open the TileSet panel at the bottom, drag your PNG in, and click Yes when Godot offers to create tiles. Switch to the TileMap panel, pick grass tiles and paint a field.","To show crops, add a Sprite2D to Plot and swap its texture for each state inside _update_color() instead of setting the ColorRect colour.","If you want plots to line up with the tiles, change CELL in world.gd to 32."],
+code:[],test:"Your farm looks like a farm. Check that all three plot states still look different."},
+{t:"Playtest and pick what to add next",goal:"Find out what is missing before adding more.",do:["Give the game to your first playtester and do not explain anything.","Write down three places they got stuck or confused.","Fix the biggest one.","Look at your must-have list. If everything is ticked, choose one item from your nice-to-have list and build it."],
+code:[],test:"Someone else can plant, wait, harvest and sell without any help from you."}
+]},
+
+wtc:{tool:"Godot",setup:GODOT_SETUP.concat(["Also make a folder called levels."]),
+stretch:["A third form, like a hopper that jumps when you press up.","A different shape for each form, using two CollisionShape2D nodes and switching which one is disabled.","Sound effects and a puff of particles when the rocket fires.","A level timer and a best-time record.","Moving platforms, bouncy pads, or water that slows you down.","Level 3 that needs both forms in the right order."],
+steps:[
+{t:"Drop a wheel onto the ground",goal:"A round vehicle that falls and lands on a floor.",why:"A RigidBody2D is moved by the physics engine. You push it, and it handles gravity, bounce and friction.",do:["Make a new scene: click Other Node, choose RigidBody2D, and rename it Vehicle.","Add a Sprite2D child with res://icon.svg as its Texture and a Scale of 0.3.","Add a CollisionShape2D child with a New CircleShape2D of radius 19.","In the Inspector, under Physics Material Override choose New PhysicsMaterial, then set Friction to 1 and Bounce to 0.2. Under Angular, set Damp to 1.","Save as scenes/vehicle.tscn.","Make a new scene with a Node2D root named Level1 and save it as levels/level_1.tscn.","Add a StaticBody2D child named Ground at Position 0, 300. Give it a CollisionShape2D with a RectangleShape2D of 3000 by 40, and a ColorRect child sized 3000 by 40 at Position -1500, -20.","Drag vehicle.tscn into Level1 and put it at Position 0, 200. Press F6 to run."],
+code:[],test:"The wheel falls, lands on the ground and bounces a little. To make this the starting scene, use Project, then Project Settings, then Application, then Run, then Main Scene."},
+{t:"Roll with the arrow keys",goal:"Left and right make the wheel spin and roll.",do:["Right-click Vehicle in vehicle.tscn, choose Attach Script, save it as scripts/vehicle.gd, and paste the code.","Run the level and press the left and right arrow keys.","Tune ROLL_TORQUE: if the wheel is too slow, raise it. If it spins on the spot, raise the Friction on the Physics Material."],
+code:[{lang:"GDScript",file:"scripts/vehicle.gd",text:`extends RigidBody2D
+
+const ROLL_TORQUE := 12000.0
+
+func _physics_process(_delta: float) -> void:
+	var dir := Input.get_axis("ui_left", "ui_right")
+	apply_torque(dir * ROLL_TORQUE)`}],test:"The wheel rolls left and right with some weight to it. Spend a few minutes tuning how it feels before moving on."},
+{t:"Add a camera and some hills",goal:"The camera follows the wheel across a bumpy track.",do:["In vehicle.tscn add a Camera2D child of Vehicle. In the Inspector turn on Position Smoothing.","In level_1.tscn select Ground, press Ctrl+D (Cmd+D on Mac) to duplicate it, and set Rotation to -15 in the Inspector. Move it so it joins the flat ground like a ramp.","Make three or four ramps and bumps. Make the track at least 3000 wide in total."],
+code:[],test:"You can roll up and down hills and the camera keeps you in view."},
+{t:"Add a flag to reach",goal:"Touching the flag ends the level.",do:["Make a new scene: Area2D root named Flag. Add a ColorRect (size 20 by 80, position -10, -80, bright yellow) and a CollisionShape2D (RectangleShape2D of 20 by 80 at position 0, -40).","Attach scripts/flag.gd (first code block) and save as scenes/flag.tscn.","Drag flag.tscn into Level1 near the end of the track. Keep its name Flag.","Attach scripts/level.gd (second code block) to the Level1 root node."],
+code:[{lang:"GDScript",file:"scripts/flag.gd",text:`extends Area2D
+
+signal reached
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body is RigidBody2D:
+		reached.emit()`},{lang:"GDScript",file:"scripts/level.gd",text:`extends Node2D
+
+@export_file("*.tscn") var next_level: String = ""
+
+func _ready() -> void:
+	$Flag.reached.connect(_on_flag_reached)
+
+func _on_flag_reached() -> void:
+	if next_level != "":
+		get_tree().change_scene_to_file.call_deferred(next_level)
+	else:
+		print("You win!")`}],test:"Roll into the flag and the Output panel prints You win!"},
+{t:"Fall off and restart",goal:"Falling off the world restarts the level, and R restarts it any time.",do:["Make a new scene: Area2D root named KillZone with a CollisionShape2D holding a RectangleShape2D of 6000 by 100. Attach scripts/kill_zone.gd (first code block) and save as scenes/kill_zone.tscn.","Drag it into Level1 at Position 0, 1000, well below the ground.","Project Settings, then Input Map: add an action called restart and bind it to R.","Replace level.gd with the second code block."],
+code:[{lang:"GDScript",file:"scripts/kill_zone.gd",text:`extends Area2D
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body is RigidBody2D:
+		get_tree().reload_current_scene.call_deferred()`},{lang:"GDScript",file:"scripts/level.gd (replace)",text:`extends Node2D
+
+@export_file("*.tscn") var next_level: String = ""
+
+func _ready() -> void:
+	$Flag.reached.connect(_on_flag_reached)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("restart"):
+		get_tree().reload_current_scene()
+
+func _on_flag_reached() -> void:
+	if next_level != "":
+		get_tree().change_scene_to_file.call_deferred(next_level)
+	else:
+		print("You win!")`}],test:"Roll off the edge and the level restarts. Pressing R restarts it at any time."},
+{t:"Add the transformation",goal:"Press T and the wheel turns into a rocket that can fly.",why:"This is the idea your whole game hangs on. One body, two behaviours, swapped by a variable.",do:["Project Settings, then Input Map: add an action called transform and bind it to T.","Replace vehicle.gd with the code below.","Run the level. Press T, then hold the up arrow."],
+code:[{lang:"GDScript",file:"scripts/vehicle.gd (replace)",text:`extends RigidBody2D
+
+enum Form { WHEEL, ROCKET }
+
+const ROLL_TORQUE := 12000.0
+const ROCKET_SIDE_FORCE := 600.0
+const ROCKET_THRUST := 1800.0
+
+var form: Form = Form.WHEEL
+
+@onready var sprite: Sprite2D = $Sprite2D
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("transform"):
+		form = Form.ROCKET if form == Form.WHEEL else Form.WHEEL
+		sprite.modulate = Color("ff5d3a") if form == Form.ROCKET else Color.WHITE
+		angular_damp = 8.0 if form == Form.ROCKET else 1.0
+
+func _physics_process(_delta: float) -> void:
+	var dir := Input.get_axis("ui_left", "ui_right")
+	match form:
+		Form.WHEEL:
+			apply_torque(dir * ROLL_TORQUE)
+		Form.ROCKET:
+			apply_central_force(Vector2(dir * ROCKET_SIDE_FORCE, 0.0))
+			if Input.is_action_pressed("ui_up"):
+				apply_central_force(Vector2(0.0, -ROCKET_THRUST))`}],test:"Pressing T turns the vehicle orange. In rocket form, holding up lifts you into the air. If it does not lift, check that ROCKET_THRUST is bigger than the vehicle's weight (about 980 for a mass of 1)."},
+{t:"Make level 2 need the rocket",goal:"A gap that is too wide to roll across, so the player has to transform.",why:"Games like Mario teach, test, then twist. Level 1 teaches rolling. Level 2 tests the new form by making it the only way across.",do:["Open level_1.tscn and choose Scene, then Save Scene As, and save it as levels/level_2.tscn.","In level_2, delete or move a section of ground to leave a gap about 600 wide in the middle, and put the Flag on the far side.","Open level_1.tscn, click the Level1 root, and in the Inspector set Next Level to res://levels/level_2.tscn.","Play from level 1 and try to cross the gap with the wheel, then with the rocket."],
+code:[],test:"Level 1 leads into level 2. The wheel cannot cross the gap, and the rocket can."},
+{t:"Make it funny, then playtest",goal:"A game that surprises people.",do:["Add a sound when you transform and a noise from the rocket.","Add a silly detail: a wobbling face, a honk, a puff of particles from the rocket.","Write down three ridiculous vehicle ideas for forms 3, 4 and 5.","Hand the game to your first playtester. Watch where they laugh, and where they get stuck."],
+code:[],test:"Your playtester finishes both levels, and you have a list of what to build next."}
+]},
+
+kart:{tool:"Godot",setup:GODOT_SETUP.concat(["Make a folder called levels as well. You will use the arrow keys to drive and Space to use items."]),
+stretch:["Make the rivals real cars that collide with you.","Add a drift button that lets you turn sharper and slide.","Add a grass area that slows you down using an Area2D.","Show race positions (1st, 2nd, 3rd).","Add more item types, such as a mushroom boost.","Build a second track and a track select screen."],
+steps:[
+{t:"Drive a car",goal:"A car you can accelerate, steer and brake with the arrow keys.",why:"The car keeps a speed number and a facing direction. Steering turns the facing, and speed moves the car that way.",do:["Click Other Node, choose CharacterBody2D, and rename it Car.","Add a Sprite2D child with res://icon.svg as its Texture and a Scale of 0.25. Add a small ColorRect at the top edge so you can see which way the car faces.","Add a CollisionShape2D child with a RectangleShape2D of 24 by 24.","Click Car and set Motion Mode to Floating in the Inspector.","Add a Camera2D child and turn on Position Smoothing.","Attach scripts/car.gd and paste the code. Save as scenes/car.tscn.","Make a new scene with a Node2D root named Level, save it as levels/level_1.tscn, and drag the car in. Run it with F6."],
+code:[{lang:"GDScript",file:"scripts/car.gd",text:`extends CharacterBody2D
+
+const ACCEL := 560.0
+const MAX_SPEED := 450.0
+const TURN_SPEED := 2.6
+const FRICTION := 1.0
+
+var speed := 0.0
+
+func _physics_process(delta: float) -> void:
+	var throttle := Input.get_axis("ui_down", "ui_up")
+	var steer := Input.get_axis("ui_left", "ui_right")
+
+	speed += throttle * ACCEL * delta
+	speed = lerpf(speed, 0.0, FRICTION * delta)
+	speed = clampf(speed, -MAX_SPEED * 0.4, MAX_SPEED)
+
+	rotation += steer * TURN_SPEED * delta * clampf(speed / 200.0, -1.0, 1.0)
+	velocity = Vector2.UP.rotated(rotation) * speed
+	move_and_slide()
+
+	if get_slide_collision_count() > 0:
+		speed *= 0.9`}],test:"Up accelerates, down brakes and reverses, and left and right only turn while the car is moving. Spend time tuning ACCEL, TURN_SPEED and FRICTION until it feels fun."},
+{t:"Build a track",goal:"A looping road with walls so you cannot drive off.",do:["In level_1.tscn add a ColorRect for grass: set Position to -2000, -2000 and Size to 4000 by 4000, choose a green colour, and set its Z Index to -10.","Add a Line2D named Road. In the Inspector set Width to 180, tick Closed, and pick a grey colour. With Road selected, click in the viewport to place points in an oval loop.","Add a StaticBody2D named Walls. Add two CollisionPolygon2D children and set Build Mode to Segments on each.","Select the first CollisionPolygon2D and click around the outside edge of the road to make the outer wall. Click the first point to close it. Do the same for the inside edge with the second one.","Move the Car to just after where you want the start line."],
+code:[],test:"You can drive around the loop, and the walls stop you leaving the road. If the car drives through the walls, check that Build Mode is Segments and that the polygon is closed."},
+{t:"Count laps and time the race",goal:"A lap counter and a timer that stops when you finish.",why:"Checkpoints must be crossed in order, so you cannot cheat by turning around at the start line.",do:["In level_1.tscn add a Node2D named Checkpoints. Inside it add 4 Area2D nodes, each with a CollisionShape2D holding a RectangleShape2D wide enough to cross the whole road.","Place the first one on the start line, then put the others around the loop in driving order. The first child is the start line.","Add a CanvasLayer named HUD with a Label child named LapLabel.","Attach scripts/race.gd to the Level root node and paste the code."],
+code:[{lang:"GDScript",file:"scripts/race.gd",text:`extends Node2D
+
+@export var total_laps := 3
+
+var lap := 1
+var next_checkpoint := 1
+var race_time := 0.0
+var finished := false
+
+@onready var checkpoints: Array[Node] = $Checkpoints.get_children()
+@onready var label: Label = $HUD/LapLabel
+
+func _ready() -> void:
+	for i in checkpoints.size():
+		checkpoints[i].body_entered.connect(_on_checkpoint.bind(i))
+	_update_label()
+
+func _process(delta: float) -> void:
+	if not finished:
+		race_time += delta
+		_update_label()
+
+func _on_checkpoint(body: Node2D, index: int) -> void:
+	if finished or not (body is CharacterBody2D) or index != next_checkpoint:
+		return
+	next_checkpoint = (next_checkpoint + 1) % checkpoints.size()
+	if index == 0:
+		lap += 1
+		if lap > total_laps:
+			finished = true
+	_update_label()
+
+func _update_label() -> void:
+	if finished:
+		label.text = "Finished! Time: %.1f s" % race_time
+	else:
+		label.text = "Lap %d / %d   Time: %.1f s" % [lap, total_laps, race_time]`}],test:"Drive three full laps. The lap number goes up each time you cross the line after the other checkpoints, and the label shows Finished at the end."},
+{t:"Add boost pads",goal:"Driving over a pad gives a burst of speed.",do:["Make a new scene: Area2D root named BoostPad, with a ColorRect (orange, 60 by 30, position -30, -15) and a CollisionShape2D of the same size. Attach scripts/boost_pad.gd (first code block) and save as scenes/boost_pad.tscn.","Replace car.gd with the second code block. It adds a boost() function and a boost timer.","Drag a few boost pads onto the track."],
+code:[{lang:"GDScript",file:"scripts/boost_pad.gd",text:`extends Area2D
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.has_method("boost"):
+		body.boost()`},{lang:"GDScript",file:"scripts/car.gd (replace)",text:`extends CharacterBody2D
+
+const ACCEL := 560.0
+const MAX_SPEED := 450.0
+const TURN_SPEED := 2.6
+const FRICTION := 1.0
+
+var speed := 0.0
+var boost_time := 0.0
+
+func boost() -> void:
+	boost_time = 1.5
+
+func _physics_process(delta: float) -> void:
+	var throttle := Input.get_axis("ui_down", "ui_up")
+	var steer := Input.get_axis("ui_left", "ui_right")
+
+	var top_speed := MAX_SPEED
+	if boost_time > 0.0:
+		boost_time -= delta
+		top_speed = MAX_SPEED * 1.6
+		speed = top_speed
+
+	speed += throttle * ACCEL * delta
+	speed = lerpf(speed, 0.0, FRICTION * delta)
+	speed = clampf(speed, -MAX_SPEED * 0.4, top_speed)
+
+	rotation += steer * TURN_SPEED * delta * clampf(speed / 200.0, -1.0, 1.0)
+	velocity = Vector2.UP.rotated(rotation) * speed
+	move_and_slide()
+
+	if get_slide_collision_count() > 0:
+		speed *= 0.9`}],test:"Driving over a pad makes the car noticeably faster for about a second and a half."},
+{t:"Add rival racers",goal:"Two AI racers that drive the track so you have someone to race.",why:"These rivals follow a fixed path, so they act like ghosts and drive through you. That keeps this step simple. Making them real cars is a stretch goal.",do:["In level_1.tscn add a Path2D named RivalPath. Select it and use the toolbar to click points down the middle of the road in a loop, then click Close Curve.","Make a new scene with a PathFollow2D root named Rival and a Sprite2D child (the Godot icon, Scale 0.25, any colour in Modulate). Attach scripts/rival.gd and save as scenes/rival.tscn.","Drag two rivals into RivalPath as children. Change Progress on one so they start apart, and give them different Speed values in the Inspector."],
+code:[{lang:"GDScript",file:"scripts/rival.gd",text:`extends PathFollow2D
+
+@export var speed := 280.0
+
+func _process(delta: float) -> void:
+	progress += speed * delta`}],test:"Two coloured squares race around the track ahead of you. Tweak their speeds so the race is close but you can win."},
+{t:"Add item boxes and a banana peel",goal:"Drive through a box to get a banana, then press Space to drop it behind you.",do:["Project Settings, then Input Map: add an action called use_item and bind it to Space.","Make a Banana scene: an Area2D root with a yellow ColorRect (20 by 20, position -10, -10) and a CollisionShape2D (20 by 20). Attach scripts/banana.gd (first block) and save as scenes/banana.tscn.","Make an ItemBox scene: an Area2D with a ColorRect (purple) and a CollisionShape2D. Attach scripts/item_box.gd (second block) and save as scenes/item_box.tscn.","Replace car.gd with the third code block and drop a few item boxes on the track."],
+code:[{lang:"GDScript",file:"scripts/banana.gd",text:`extends Area2D
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.has_method("spin_out"):
+		body.spin_out()
+		queue_free()`},{lang:"GDScript",file:"scripts/item_box.gd",text:`extends Area2D
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.has_method("give_banana"):
+		body.give_banana()
+		hide()
+		set_deferred("monitoring", false)
+		await get_tree().create_timer(3.0).timeout
+		show()
+		monitoring = true`},{lang:"GDScript",file:"scripts/car.gd (replace)",text:`extends CharacterBody2D
+
+const ACCEL := 560.0
+const MAX_SPEED := 450.0
+const TURN_SPEED := 2.6
+const FRICTION := 1.0
+const BANANA := preload("res://scenes/banana.tscn")
+
+var speed := 0.0
+var boost_time := 0.0
+var has_banana := false
+
+func boost() -> void:
+	boost_time = 1.5
+
+func give_banana() -> void:
+	has_banana = true
+
+func spin_out() -> void:
+	speed = 0.0
+	var tween := create_tween()
+	tween.tween_property(self, "rotation", rotation + TAU * 2.0, 0.8)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("use_item") and has_banana:
+		has_banana = false
+		var banana := BANANA.instantiate()
+		banana.global_position = global_position + Vector2.DOWN.rotated(rotation) * 50.0
+		get_parent().add_child(banana)
+
+func _physics_process(delta: float) -> void:
+	var throttle := Input.get_axis("ui_down", "ui_up")
+	var steer := Input.get_axis("ui_left", "ui_right")
+
+	var top_speed := MAX_SPEED
+	if boost_time > 0.0:
+		boost_time -= delta
+		top_speed = MAX_SPEED * 1.6
+		speed = top_speed
+
+	speed += throttle * ACCEL * delta
+	speed = lerpf(speed, 0.0, FRICTION * delta)
+	speed = clampf(speed, -MAX_SPEED * 0.4, top_speed)
+
+	rotation += steer * TURN_SPEED * delta * clampf(speed / 200.0, -1.0, 1.0)
+	velocity = Vector2.UP.rotated(rotation) * speed
+	move_and_slide()
+
+	if get_slide_collision_count() > 0:
+		speed *= 0.9`}],test:"Drive through a box, press Space, and a banana appears behind you. Drive back into it and your car spins out."},
+{t:"Polish and playtest",goal:"A race that is fun to repeat.",do:["Add an engine sound that gets higher in pitch as speed rises (change the AudioStreamPlayer pitch_scale).","Zoom the camera out a little at high speed.","Add a title screen and a results screen.","Give the game to your first playtester. Watch whether the car feels fun to drive in the first 30 seconds."],
+code:[],test:"A friend asks for another go."}
+]},
+
+sonic:{tool:"Godot",setup:GODOT_SETUP.concat(["You will use the arrow keys to run, Space to jump, and Down to roll. These are built-in actions (ui_left, ui_right, ui_accept, ui_down), so there is nothing to set up in the Input Map yet."]),
+stretch:["A spin dash: hold Down while standing still, tap Space to charge, release Down to blast off.","Lose rings so they scatter and can be grabbed back for a few seconds.","A shield power-up that blocks one hit.","Checkpoints that save your place in a long level.","Loops. These need the character to rotate with the ground by changing up_direction to match the floor normal. Try it last, because it is the hardest thing on this list."],
+steps:[
+{t:"Run, jump and build speed",goal:"A character that speeds up gradually, skids when turning, and jumps.",why:"Sonic feels fast because speed builds up and carries on. The code keeps the speed between frames and only nudges it, instead of setting it directly.",do:["Click Other Node, choose CharacterBody2D, and rename it Player.","Add a Sprite2D child with res://icon.svg as its Texture and a Scale of 0.25.","Add a CollisionShape2D child with a New CircleShape2D of radius 14. A circle rolls smoothly over bumps.","Add a Camera2D child and turn on Position Smoothing.","Attach scripts/player.gd and paste the code. Save as scenes/player.tscn.","Make a new scene with a Node2D root named Level1 and save it as levels/level_1.tscn.","Add a StaticBody2D named Floor at Position 0, 300. Give it a CollisionShape2D with a RectangleShape2D of 4000 by 40, and a ColorRect child sized 4000 by 40 at Position -2000, -20.","Drag player.tscn into Level1 at Position 0, 200 and press F6."],
+code:[{lang:"GDScript",file:"scripts/player.gd",text:`extends CharacterBody2D
+
+const ACCEL := 600.0
+const DECEL := 1400.0
+const FRICTION := 350.0
+const MAX_RUN := 650.0
+const TOP_SPEED := 1100.0
+const JUMP := 520.0
+const GRAVITY := 1300.0
+const SLOPE_PUSH := 900.0
+
+func _ready() -> void:
+	floor_snap_length = 16.0
+	floor_max_angle = deg_to_rad(60.0)
+
+func _physics_process(delta: float) -> void:
+	var dir := Input.get_axis("ui_left", "ui_right")
+	if is_on_floor():
+		if dir != 0.0 and velocity.x != 0.0 and signf(dir) != signf(velocity.x):
+			velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+		elif dir != 0.0:
+			if absf(velocity.x) < MAX_RUN:
+				velocity.x += dir * ACCEL * delta
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
+		velocity.x += get_floor_normal().x * SLOPE_PUSH * delta
+		if Input.is_action_just_pressed("ui_accept"):
+			velocity.y = -JUMP
+	else:
+		velocity.y += GRAVITY * delta
+		velocity.x += dir * ACCEL * 0.5 * delta
+	velocity.x = clampf(velocity.x, -TOP_SPEED, TOP_SPEED)
+	move_and_slide()`}],test:"Holding right builds speed over about a second. Pressing left while running fast makes you skid before turning. Space jumps. Tune ACCEL and FRICTION until running feels good."},
+{t:"Build hills and slopes",goal:"Rolling hills where going downhill speeds you up and going uphill slows you down.",why:"The floor normal is an arrow pointing straight out of the ground. On a downhill slope it leans the way you are going, so adding it to your speed pushes you faster. The SLOPE_PUSH line from step 1 already does this.",do:["Delete the Floor node.","Add a StaticBody2D named Ground. Give it a CollisionPolygon2D child. Leave Build Mode on Solids.","With CollisionPolygon2D selected, click points from left to right along the top of your hills. Keep slopes gentler than about 50 degrees.","Then click points far below the hills, going back to the left, and click the first point to close the shape.","Add a Polygon2D child to Ground. Attach scripts/ground_visual.gd to it and paste the code. It copies the shape so you do not have to draw it twice. Pick a colour in its Color property.","Make one long downhill, a valley shaped like a U, and a steep uphill."],
+code:[{lang:"GDScript",file:"scripts/ground_visual.gd",text:`extends Polygon2D
+
+func _ready() -> void:
+	polygon = $"../CollisionPolygon2D".polygon`}],test:"Let go of the keys at the top of a hill and the character rolls down by itself and up the other side of the valley. If you slide through the ground, check the polygon is closed and the points go all the way around."},
+{t:"Rings, a timer and a goal",goal:"Rings to collect, a timer, and a goal post at the end.",why:"An Autoload is a script that is always running, which any other script can reach by name. It keeps the ring count.",do:["Create scripts/game.gd and paste the first code block. Then Project, Project Settings, Globals, Autoload: pick the file, name it Game and click Add.","Make a Ring scene: an Area2D root with a gold ColorRect (12 by 12, position -6, -6) and a CollisionShape2D (12 by 12). Attach scripts/ring.gd (second block) and save as scenes/ring.tscn.","Make a Goal scene: an Area2D root with a ColorRect (20 by 100, position -10, -100, blue) and a CollisionShape2D (20 by 100 at position 0, -50). Save it as scenes/goal.tscn with no script.","In level_1.tscn, drag in rows of rings along your hills and put the Goal at the end. Keep its name Goal.","Add a CanvasLayer named HUD with a Label child. Set its Font Size to 24 under Theme Overrides.","Attach scripts/level.gd (third block) to the Level1 root."],
+code:[{lang:"GDScript",file:"scripts/game.gd",text:`extends Node
+
+var rings := 0
+
+func add_ring() -> void:
+	rings += 1
+
+func lose_rings() -> void:
+	rings = 0`},{lang:"GDScript",file:"scripts/ring.gd",text:`extends Area2D
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _process(delta: float) -> void:
+	rotation += 3.0 * delta
+
+func _on_body_entered(body: Node2D) -> void:
+	if body is CharacterBody2D:
+		Game.add_ring()
+		queue_free()`},{lang:"GDScript",file:"scripts/level.gd",text:`extends Node2D
+
+var time := 0.0
+var finished := false
+
+@onready var label: Label = $HUD/Label
+
+func _ready() -> void:
+	Game.rings = 0
+	$Goal.body_entered.connect(_on_goal)
+
+func _process(delta: float) -> void:
+	if not finished:
+		time += delta
+	var text := "Rings: %d   Time: %.1f" % [Game.rings, time]
+	if finished:
+		text += "   GOAL!"
+	label.text = text
+
+func _on_goal(body: Node2D) -> void:
+	if body is CharacterBody2D:
+		finished = true`}],test:"Rings spin and disappear when you touch them, the count goes up, and the timer stops with GOAL! when you reach the post."},
+{t:"Enemies, getting hurt and rolling",goal:"Robots that patrol. Jump or roll into them to defeat them, and run into them to lose your rings.",why:"Like the real games, rings act as your health. Get hit with rings and you lose them. Get hit with none and you start again.",do:["Replace player.gd with the first code block. It adds rolling (hold Down while running), spinning when you jump, and getting hurt.","Make an Enemy scene: an Area2D root with a red ColorRect (28 by 20, position -14, -10) and a CollisionShape2D (28 by 20). Attach scripts/enemy.gd (second block) and save as scenes/enemy.tscn.","Place a few enemies sitting on flat parts of the ground. Change Distance and Speed in the Inspector for each one."],
+code:[{lang:"GDScript",file:"scripts/player.gd (replace)",text:`extends CharacterBody2D
+
+const ACCEL := 600.0
+const DECEL := 1400.0
+const FRICTION := 350.0
+const ROLL_FRICTION := 120.0
+const MAX_RUN := 650.0
+const TOP_SPEED := 1100.0
+const JUMP := 520.0
+const GRAVITY := 1300.0
+const SLOPE_PUSH := 900.0
+
+var rolling := false
+var hurt_time := 0.0
+
+@onready var sprite: Sprite2D = $Sprite2D
+
+func _ready() -> void:
+	floor_snap_length = 16.0
+	floor_max_angle = deg_to_rad(60.0)
+
+func _physics_process(delta: float) -> void:
+	var dir := Input.get_axis("ui_left", "ui_right")
+	if is_on_floor():
+		rolling = Input.is_action_pressed("ui_down") and absf(velocity.x) > 150.0
+		if rolling:
+			velocity.x = move_toward(velocity.x, 0.0, ROLL_FRICTION * delta)
+		elif dir != 0.0 and velocity.x != 0.0 and signf(dir) != signf(velocity.x):
+			velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+		elif dir != 0.0:
+			if absf(velocity.x) < MAX_RUN:
+				velocity.x += dir * ACCEL * delta
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
+		var push := SLOPE_PUSH * (1.5 if rolling else 1.0)
+		velocity.x += get_floor_normal().x * push * delta
+		if Input.is_action_just_pressed("ui_accept"):
+			velocity.y = -JUMP
+			rolling = true
+	else:
+		velocity.y += GRAVITY * delta
+		velocity.x += dir * ACCEL * 0.5 * delta
+	velocity.x = clampf(velocity.x, -TOP_SPEED, TOP_SPEED)
+	move_and_slide()
+	_update_look(delta)
+
+func _update_look(delta: float) -> void:
+	if rolling:
+		sprite.rotation += velocity.x * 0.02 * delta
+	else:
+		sprite.rotation = 0.0
+	if hurt_time > 0.0:
+		hurt_time -= delta
+		sprite.visible = int(hurt_time * 20.0) % 2 == 0
+	else:
+		sprite.visible = true
+
+func bounce() -> void:
+	velocity.y = -JUMP * 0.8
+	rolling = true
+
+func launch(power: Vector2) -> void:
+	velocity = power
+
+func hurt(from_x: float) -> void:
+	if hurt_time > 0.0:
+		return
+	if Game.rings == 0:
+		get_tree().reload_current_scene.call_deferred()
+		return
+	Game.lose_rings()
+	hurt_time = 1.5
+	velocity = Vector2(signf(global_position.x - from_x) * 300.0, -350.0)`},{lang:"GDScript",file:"scripts/enemy.gd",text:`extends Area2D
+
+@export var distance := 120.0
+@export var speed := 60.0
+
+var start_x := 0.0
+var dir := 1.0
+
+func _ready() -> void:
+	start_x = position.x
+	body_entered.connect(_on_body_entered)
+
+func _process(delta: float) -> void:
+	position.x += dir * speed * delta
+	if absf(position.x - start_x) > distance:
+		position.x = start_x + signf(position.x - start_x) * distance
+		dir = -dir
+
+func _on_body_entered(body: Node2D) -> void:
+	if not body.has_method("hurt"):
+		return
+	if body.rolling or body.velocity.y > 0.0:
+		if not body.is_on_floor():
+			body.bounce()
+		queue_free()
+	else:
+		body.hurt(global_position.x)`}],test:"Jumping onto a robot defeats it and bounces you up. Rolling into one defeats it too. Running into one makes you lose your rings and flash. With no rings, getting hit restarts the level."},
+{t:"Springs and falling",goal:"Springs that launch you, and falling off the world restarts the level.",do:["Make a Spring scene: an Area2D root with a yellow ColorRect (30 by 10, position -15, -10) and a CollisionShape2D (30 by 10 at position 0, -5). Attach scripts/spring.gd (first block) and save as scenes/spring.tscn.","Place springs on the ground. Rotate one to 45 degrees to launch diagonally, or 90 to launch sideways. Raise Power for bigger launches.","Make a KillZone scene: an Area2D with a CollisionShape2D holding a RectangleShape2D of 8000 by 100. Attach scripts/kill_zone.gd (second block) and save it as scenes/kill_zone.tscn.","Put the KillZone well below the lowest part of your level."],
+code:[{lang:"GDScript",file:"scripts/spring.gd",text:`extends Area2D
+
+@export var power := 950.0
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.has_method("launch"):
+		body.launch(Vector2.UP.rotated(rotation) * power)`},{lang:"GDScript",file:"scripts/kill_zone.gd",text:`extends Area2D
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body is CharacterBody2D:
+		get_tree().reload_current_scene.call_deferred()`}],test:"Springs throw you high into the air, and a rotated spring throws you in the direction it points. Falling into a pit restarts the level."},
+{t:"Design the level for speed",goal:"A level that rewards going fast and gives skilled players a secret route.",why:"Sonic levels have a fast high route and a slower low route. Skilled players stay high, and everyone else still has fun below.",do:["Draw the level on paper first. Mark where you want the player to go fast and where they should slow down and look around.","Build a long downhill run at the start so the player feels fast straight away.","Add a higher route of platforms (StaticBody2D with a CollisionPolygon2D) that you can only reach with a spring or a big jump.","Put rings on the best path as a hint to where the player should go.","Do not put an enemy straight after a fast downhill where the player cannot see it coming."],
+code:[],test:"You can finish the level by both routes, and the high route is faster."},
+{t:"Polish and playtest",goal:"A level that feels fast and fair.",do:["Add sounds for jumping, collecting a ring and defeating a robot with AudioStreamPlayer nodes.","Zoom the camera out a little when you are going fast by changing the Camera2D zoom based on speed.","Add a results screen that shows the time and the rings.","Watch your first playtester and note where they get hit by something they could not see."],
+code:[],test:"A friend wants to try again to beat their time."}
+]},
+
+magic:{tool:"Godot",setup:GODOT_SETUP.concat(["You will move with WASD and aim spells with the mouse.","Project, Project Settings, Input Map: add these actions and press the key for each: move_left (A), move_right (D), move_up (W), move_down (S), interact (E), spell_1 (1) and spell_2 (2). Add cast and choose Left Mouse Button from the Mouse Buttons list."]),
+stretch:["A shield spell that blocks one hit, using a third Spell resource with damage 0.","A mana bar that spells use up and that refills over time.","Spell icons in the HUD that grey out during the cooldown.","A boss with a lot of health and a pattern of attacks.","A second area through a door, using change_scene_to_file.","A spell book menu that shows every spell the player has learned."],
+steps:[
+{t:"Walk around the courtyard",goal:"A student who walks with WASD inside a walled courtyard.",do:["Click Other Node, choose CharacterBody2D, and rename it Player.","Add a Sprite2D with res://icon.svg as its Texture and a Scale of 0.25, and a CollisionShape2D with a New CircleShape2D of radius 12.","Click Player and set Motion Mode to Floating.","Add a Camera2D child and turn on Position Smoothing.","Attach scripts/player.gd and paste the code. Save as scenes/player.tscn.","Make a new scene with a Node2D root named Courtyard and save it as levels/courtyard.tscn. Add a large ColorRect for grass with Z Index -10.","Make walls: StaticBody2D nodes, each with a CollisionShape2D rectangle and a matching ColorRect. Make four around the edges and a few inside as pillars.","Drag player.tscn into the courtyard and press F6."],
+code:[{lang:"GDScript",file:"scripts/player.gd",text:`extends CharacterBody2D
+
+const SPEED := 140.0
+
+func _ready() -> void:
+	add_to_group("player")
+
+func _physics_process(_delta: float) -> void:
+	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	velocity = dir * SPEED
+	move_and_slide()`}],test:"WASD moves the student around, and the walls block the way."},
+{t:"Make spells out of data",goal:"A Spell resource, and a Spark spell saved as a file.",why:"A Resource is a bundle of data saved as a file. Every spell is the same code with different numbers, so making a new spell later means making a new file, not writing new code.",do:["Create scripts/spell.gd and paste the first code block. The class_name line makes Spell a new type that Godot knows about.","In the FileSystem panel, make a folder called spells. Right-click it, choose Create New, then Resource, search for Spell and click Create. Save it as spells/spark.tres.","Click spark.tres. In the Inspector set Spell Name to Spark, Damage to 1, Cooldown to 0.3, Speed to 500 and Color to light blue.","Make a Bolt scene: an Area2D root with a ColorRect (16 by 6, position -8, -3) and a CollisionShape2D (16 by 6). Attach scripts/bolt.gd (second block) and save as scenes/bolt.tscn."],
+code:[{lang:"GDScript",file:"scripts/spell.gd",text:`class_name Spell
+extends Resource
+
+@export var spell_name := "Spark"
+@export var damage := 1
+@export var cooldown := 0.3
+@export var speed := 500.0
+@export var color := Color.WHITE`},{lang:"GDScript",file:"scripts/bolt.gd",text:`extends Area2D
+
+var spell: Spell
+var direction := Vector2.RIGHT
+
+func _ready() -> void:
+	$ColorRect.color = spell.color
+	rotation = direction.angle()
+	body_entered.connect(_on_body_entered)
+	get_tree().create_timer(2.0).timeout.connect(queue_free)
+
+func _physics_process(delta: float) -> void:
+	position += direction * spell.speed * delta
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		return
+	if body.has_method("take_damage"):
+		body.take_damage(spell.damage)
+	queue_free()`}],test:"Nothing new happens yet when you play. Check that spark.tres shows your numbers in the Inspector and that there are no red errors in the Output panel."},
+{t:"Cast spells with a cooldown",goal:"Click to fire a bolt towards the mouse, with a short wait between casts.",why:"A cooldown is a number that counts down to zero. You can only cast when it reaches zero, and casting sets it back to the spell's cooldown.",do:["Replace player.gd with the code below.","Click the Player node. In the Inspector, find Spells, click it, add one element, and drag spells/spark.tres into the slot.","Run the courtyard and click around."],
+code:[{lang:"GDScript",file:"scripts/player.gd (replace)",text:`extends CharacterBody2D
+
+const SPEED := 140.0
+const BOLT := preload("res://scenes/bolt.tscn")
+
+@export var spells: Array[Spell] = []
+
+var current := 0
+var cooldown_left := 0.0
+var health := 5
+var hurt_time := 0.0
+
+func _ready() -> void:
+	add_to_group("player")
+
+func _physics_process(delta: float) -> void:
+	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	velocity = dir * SPEED
+	move_and_slide()
+	cooldown_left = maxf(cooldown_left - delta, 0.0)
+	hurt_time = maxf(hurt_time - delta, 0.0)
+	if Input.is_action_pressed("cast"):
+		cast()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("spell_1"):
+		current = 0
+	elif event.is_action_pressed("spell_2") and spells.size() > 1:
+		current = 1
+
+func cast() -> void:
+	if cooldown_left > 0.0 or spells.is_empty():
+		return
+	var spell := spells[current]
+	var bolt := BOLT.instantiate()
+	bolt.spell = spell
+	bolt.global_position = global_position
+	bolt.direction = global_position.direction_to(get_global_mouse_position())
+	get_parent().add_child(bolt)
+	cooldown_left = spell.cooldown
+
+func take_damage(amount: int) -> void:
+	if hurt_time > 0.0:
+		return
+	health -= amount
+	hurt_time = 1.0
+	if health <= 0:
+		get_tree().reload_current_scene.call_deferred()`}],test:"Clicking fires a blue bolt towards the mouse. Holding the button fires about three per second. Bolts disappear when they hit a wall."},
+{t:"Learn a second spell",goal:"A slow, powerful fire spell, switched with the 1 and 2 keys.",why:"This step uses no code at all. That is the payoff of making spells out of data.",do:["Right-click spark.tres and choose Duplicate. Name the copy spells/fire.tres.","Set Spell Name to Fire, Damage to 3, Cooldown to 1.0, Speed to 300 and Color to orange.","Click the Player node and add a second element to Spells. Drag fire.tres into it.","Run the game, press 2 and cast, then press 1 and cast."],
+code:[],test:"Key 1 fires quick blue sparks. Key 2 fires slow orange fireballs with a longer wait between them."},
+{t:"Add shadow imps",goal:"Creatures that chase you when you get close, flash when hit, and vanish when defeated.",do:["Make an Imp scene: a CharacterBody2D root with Motion Mode set to Floating. Add a Sprite2D (the Godot icon, Scale 0.2, a purple Modulate) and a CollisionShape2D (CircleShape2D, radius 10).","Attach scripts/imp.gd and save as scenes/imp.tscn.","Put three imps in the courtyard, away from where the player starts."],
+code:[{lang:"GDScript",file:"scripts/imp.gd",text:`extends CharacterBody2D
+
+@export var health := 3
+@export var speed := 70.0
+@export var sight := 220.0
+
+@onready var sprite: Sprite2D = $Sprite2D
+
+func _physics_process(_delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	velocity = Vector2.ZERO
+	if player and global_position.distance_to(player.global_position) < sight:
+		velocity = global_position.direction_to(player.global_position) * speed
+	move_and_slide()
+	for i in get_slide_collision_count():
+		var other := get_slide_collision(i).get_collider()
+		if other is Node and other.is_in_group("player"):
+			other.take_damage(1)
+
+func take_damage(amount: int) -> void:
+	health -= amount
+	sprite.modulate = Color.RED
+	var tween := create_tween()
+	tween.tween_property(sprite, "modulate", Color(0.7, 0.4, 1.0), 0.2)
+	if health <= 0:
+		queue_free()`}],test:"Imps chase you when you come close. Three sparks or one fireball defeats an imp. If they touch you five times, the courtyard restarts."},
+{t:"Show health and the current spell",goal:"A HUD showing your health and spell, with room for dialogue.",do:["Make a new scene with a CanvasLayer root named HUD. Add two Label children named Stats and Talk.","Set the Font Size of both to 22 under Theme Overrides. Move Talk to the bottom of the screen and set its Size to about 1000 by 60 so long lines fit.","Attach scripts/hud.gd and save as scenes/hud.tscn. Drag it into the courtyard."],
+code:[{lang:"GDScript",file:"scripts/hud.gd",text:`extends CanvasLayer
+
+@onready var stats: Label = $Stats
+@onready var talk: Label = $Talk
+
+func _ready() -> void:
+	add_to_group("hud")
+	talk.text = ""
+
+func _process(_delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null or player.spells.is_empty():
+		return
+	var spell: Spell = player.spells[player.current]
+	stats.text = "Health: %d   Spell: %s" % [player.health, spell.spell_name]
+
+func say(line: String) -> void:
+	talk.text = line
+	await get_tree().create_timer(4.0).timeout
+	if talk.text == line:
+		talk.text = ""`}],test:"The top of the screen shows Health: 5 and the spell name, which changes when you press 1 or 2. Health drops when an imp touches you."},
+{t:"Give the professor a quest",goal:"A professor who sets a quest, tracks it, and congratulates you at the end.",why:"A quest is just a few saved facts (has it started, how many imps are left) and lines that change depending on those facts.",do:["Create scripts/quest.gd (first block). Add it as an Autoload named Quest in Project Settings, Globals.","In imp.gd, add the line Quest.defeated += 1 just above queue_free() inside take_damage.","Make a Professor scene: an Area2D root with a ColorRect (24 by 32, position -12, -16, dark green) and a CollisionShape2D with a CircleShape2D of radius 40 so you can talk from close by. Attach scripts/professor.gd (second block) and save as scenes/professor.tscn.","Put the professor near where the player starts."],
+code:[{lang:"GDScript",file:"scripts/quest.gd",text:`extends Node
+
+var started := false
+var defeated := 0`},{lang:"GDScript",file:"scripts/professor.gd",text:`extends Area2D
+
+var player_near := false
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		player_near = true
+
+func _on_body_exited(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		player_near = false
+
+func _unhandled_input(event: InputEvent) -> void:
+	if player_near and event.is_action_pressed("interact"):
+		var hud := get_tree().get_first_node_in_group("hud")
+		hud.say(_next_line())
+
+func _next_line() -> String:
+	if not Quest.started:
+		Quest.started = true
+		Quest.defeated = 0
+		return "Professor: Three shadow imps escaped from the greenhouse. Please deal with them!"
+	if Quest.defeated < 3:
+		return "Professor: %d imps left. Fire works well on them." % (3 - Quest.defeated)
+	return "Professor: Splendid work! Ten points to your house."`}],test:"Press E next to the professor to get the quest. Talk again after defeating one imp and it says 2 imps left. After all three, the professor thanks you."},
+{t:"Polish and playtest",goal:"A courtyard that feels magical.",do:["Add a puff of CPUParticles2D where a bolt hits something.","Give each spell a sound by adding an AudioStream to the Spell resource and playing it in cast().","Swap the coloured squares for sprites from a free pack at kenney.nl.","Watch your first playtester. Do they find the professor? Do they work out how to switch spells?"],
+code:[],test:"A new player completes the quest without you explaining anything."}
+]},
+
+runner:{tool:"Scratch",setup:SCRATCH_SETUP.concat(["Make these variables for all sprites: Score, Speed and HighScore. Tick Score and HighScore so they show on the stage.","Paint a backdrop with a sky and a flat ground line across the bottom. The guide uses y = -120 for where the hero's feet touch the ground. Adjust that number if your ground is somewhere else."]),
+stretch:["Double jump: allow one extra jump in the air with a JumpsLeft variable.","Duck under flying obstacles by switching to a shorter costume while the down arrow is held.","A shield power-up that saves you from one crash.","A day-to-night backdrop change as the score rises.","Different obstacle types chosen at random with pick random and switch costume."],
+steps:[
+{t:"Make the hero jump",goal:"A hero who stands on the ground and jumps with Space.",why:"This is the same gravity trick as in a platformer. YSpeed goes down a little every frame, and landing resets it to zero.",do:["Paint a hero sprite and rename it Hero. Make a variable called YSpeed and choose For this sprite only.","Build the script below.","Click the green flag and press Space."],
+code:[{lang:"Scratch blocks",file:"Hero sprite",text:`when green flag clicked
+go to x: (-170) y: (-120)
+set [YSpeed] to (0)
+forever
+  change [YSpeed] by (-1)
+  change y by (YSpeed)
+  if <(y position) < (-120)> then
+    set y to (-120)
+    set [YSpeed] to (0)
+  if <<key [space] pressed?> and <(y position) = (-120)>> then
+    set [YSpeed] to (15)`}],test:"Space makes the hero jump and land back on the ground. Holding Space does not let you fly."},
+{t:"Make the world move",goal:"Scenery that scrolls past, so the hero looks like it is running.",why:"The hero never really moves sideways. Everything else slides left, which tricks your eyes.",do:["Click the Stage and build the Stage script.","Paint a small sprite for scenery, like a bush or a dash on the ground, and rename it Scenery.","Build the Scenery script. Right-click Scenery and duplicate it two or three times so there are several on screen."],
+code:[{lang:"Scratch blocks",file:"Stage",text:`when green flag clicked
+set [Speed] to (6)`},{lang:"Scratch blocks",file:"Scenery sprite",text:`when green flag clicked
+go to x: (pick random (-240) to (240)) y: (-150)
+forever
+  change x by ((0) - (Speed))
+  if <(x position) < (-220)> then
+    set x to (230)`}],test:"Bushes slide past from right to left and wrap around, so the hero looks like it is running."},
+{t:"Send obstacles",goal:"Obstacles that slide towards you, and crashing ends the game.",why:"Scratch stops sprites going fully off the stage, so the clone is deleted at x = -220, while a little of it is still visible.",do:["Paint an obstacle like a rock or a cactus and rename it Obstacle. Make its bottom line up with the ground.","Build both Obstacle scripts.","Add the crash script to the Hero."],
+code:[{lang:"Scratch blocks",file:"Obstacle sprite, script 1",text:`when green flag clicked
+hide
+forever
+  wait (pick random (1) to (2.5)) seconds
+  create clone of [myself]`},{lang:"Scratch blocks",file:"Obstacle sprite, script 2",text:`when I start as a clone
+go to x: (240) y: (-125)
+show
+repeat until <(x position) < (-220)>
+  change x by ((0) - (Speed))
+  if <touching (Hero)?> then
+    broadcast [game over]
+delete this clone`},{lang:"Scratch blocks",file:"Hero sprite, new separate script",text:`when I receive [game over]
+say [Ouch!] for (1) seconds
+stop [all]`}],test:"Obstacles slide in at random gaps. Jumping over them works, and touching one ends the game."},
+{t:"Score, speed up and high score",goal:"The score climbs, the game gets faster, and the best score is remembered.",do:["Replace the Stage script with the one below.","In the Hero's game over script, add the if block before the say block."],
+code:[{lang:"Scratch blocks",file:"Stage (replace)",text:`when green flag clicked
+set [Score] to (0)
+set [Speed] to (6)
+forever
+  wait (0.1) seconds
+  change [Score] by (1)
+  change [Speed] by (0.01)`},{lang:"Scratch blocks",file:"Hero sprite (add to the game over script)",text:`  if <(Score) > (HighScore)> then
+    set [HighScore] to (Score)`}],test:"The score climbs while you survive and the game gets faster. A new best score stays on screen after you restart."},
+{t:"Collect coins",goal:"Coins at different heights that give bonus points.",do:["Paint a small coin and rename the sprite Coin.","Build both Coin scripts."],
+code:[{lang:"Scratch blocks",file:"Coin sprite, script 1",text:`when green flag clicked
+hide
+forever
+  wait (pick random (2) to (4)) seconds
+  create clone of [myself]`},{lang:"Scratch blocks",file:"Coin sprite, script 2",text:`when I start as a clone
+go to x: (240) y: (pick random (-110) to (20))
+show
+repeat until <(x position) < (-220)>
+  change x by ((0) - (Speed))
+  if <touching (Hero)?> then
+    change [Score] by (10)
+    start sound [pop]
+    delete this clone
+delete this clone`}],test:"Coins appear at different heights. Touching one gives 10 points and a sound. High coins need a jump to reach."},
+{t:"Make it feel good",goal:"A running animation, jump sounds and a little squash on landing.",do:["Paint a second costume for the hero with the legs in a different position.","Add a new Hero script: when green flag clicked, forever, next costume, wait 0.1 seconds.","Add start sound inside the jump if block.","In the landing if block, add: set size to 110, wait 0.05 seconds, set size to 100. Note that the wait pauses the gravity loop for a moment, so keep it short."],
+code:[],test:"The hero's legs move as it runs, every jump makes a sound, and landing has a little squash."},
+{t:"Add your twist and playtest",goal:"One idea that makes the runner yours.",do:["Look at the twist from your plan. A few ideas: gravity flips, the hero changes speed with the music, or there are two lanes.","Build only that one twist and test it.","Give the game to your first playtester and watch how far they get on the first try."],
+code:[],test:"A friend's first run lasts at least 10 seconds, and they want another go."}
+]},
+
+shooter:{tool:"Scratch",setup:SCRATCH_SETUP.concat(["Make these variables for all sprites: Score, Lives, Wave, EnemiesLeft and FireDelay. Tick Score, Lives and Wave so they show on the stage.","Draw every sprite facing right. In Scratch, direction 90 is right, so a sprite drawn facing right points the way it moves."]),
+stretch:["A second enemy type that is faster but has less health.","A boss every 5 waves that takes 20 hits.","A spread shot power-up that fires three bullets at once.","A health pickup that restores one life.","A wave announcement in big letters at the start of each wave."],
+steps:[
+{t:"Move and aim the ship",goal:"A ship that moves with WASD and always points at the mouse.",do:["Paint a ship facing right and rename the sprite Ship. Make it about 40 pixels long.","Build the script below.","Click the green flag, move with WASD and move the mouse around."],
+code:[{lang:"Scratch blocks",file:"Ship sprite",text:`when green flag clicked
+go to x: (0) y: (0)
+set [Lives] to (3)
+forever
+  point towards [mouse-pointer]
+  if <key [w] pressed?> then
+    change y by (4)
+  if <key [s] pressed?> then
+    change y by (-4)
+  if <key [a] pressed?> then
+    change x by (-4)
+  if <key [d] pressed?> then
+    change x by (4)`}],test:"The ship moves with WASD and always faces the mouse pointer."},
+{t:"Shoot bullets",goal:"Holding the mouse button fires a stream of bullets from the ship.",why:"The bullet copies the ship's direction using the of block in Sensing. That is how it knows which way to fly.",do:["Paint a small bullet facing right and rename the sprite Bullet.","Build both Bullet scripts. The direction of Ship block is in Sensing: choose Ship in the right dropdown and direction in the left."],
+code:[{lang:"Scratch blocks",file:"Bullet sprite, script 1",text:`when green flag clicked
+hide
+set [FireDelay] to (0.25)
+forever
+  if <mouse down?> then
+    create clone of [myself]
+    wait (FireDelay) seconds`},{lang:"Scratch blocks",file:"Bullet sprite, script 2",text:`when I start as a clone
+go to [Ship]
+point in direction ([direction] of [Ship])
+show
+repeat until <<touching [edge]?> or <touching [Enemy]?>>
+  move (12) steps
+wait (0.02) seconds
+delete this clone`}],test:"Holding the mouse fires bullets towards the pointer, about four per second. The Enemy option appears in the dropdown after the next step."},
+{t:"Add enemies that chase you",goal:"Enemies that appear at the edges, chase the ship and pop when shot.",why:"The short wait before a bullet deletes itself gives the enemy time to notice it was hit.",do:["Paint an enemy and rename the sprite Enemy.","Build both Enemy scripts.","Click the Stage and build the Stage script, which sends enemies in."],
+code:[{lang:"Scratch blocks",file:"Enemy sprite, script 1",text:`when green flag clicked
+hide`},{lang:"Scratch blocks",file:"Enemy sprite, script 2",text:`when I start as a clone
+if <(pick random (1) to (2)) = (1)> then
+  go to x: (pick random (-230) to (230)) y: (170)
+else
+  go to x: (230) y: (pick random (-170) to (170))
+show
+repeat until <<touching [Bullet]?> or <touching [Ship]?>>
+  point towards [Ship]
+  move ((1) + ((Wave) * (0.3))) steps
+if <touching [Ship]?> then
+  broadcast [hit]
+else
+  change [Score] by (1)
+  start sound [pop]
+change [EnemiesLeft] by (-1)
+delete this clone`},{lang:"Scratch blocks",file:"Stage",text:`when green flag clicked
+set [Score] to (0)
+set [Wave] to (1)
+set [EnemiesLeft] to (0)
+forever
+  wait (1.5) seconds
+  create clone of [Enemy]
+  change [EnemiesLeft] by (1)`}],test:"Enemies appear from the top and right edges and chase you. One bullet pops an enemy and adds a point."},
+{t:"Lose lives",goal:"Getting touched costs a life, the ship flashes, and zero lives ends the game.",do:["Add this script to the Ship."],
+code:[{lang:"Scratch blocks",file:"Ship sprite, new separate script",text:`when I receive [hit]
+change [Lives] by (-1)
+repeat (5)
+  set [ghost] effect to (70)
+  wait (0.1) seconds
+  set [ghost] effect to (0)
+  wait (0.1) seconds
+if <(Lives) < (1)> then
+  say (join [Game over! Score: ] (Score)) for (2) seconds
+  stop [all]`}],test:"Each touch takes a life and makes the ship flash. After three, the game ends and shows your score."},
+{t:"Send enemies in waves",goal:"Waves that get bigger and faster, with a break in between.",why:"Waves give the player a rhythm: danger, then a short rest, then more danger. EnemiesLeft counts how many are still alive so the game knows when a wave is cleared.",do:["Replace the Stage script with the one below.","Enemies already move faster each wave, because their move block uses Wave."],
+code:[{lang:"Scratch blocks",file:"Stage (replace)",text:`when green flag clicked
+set [Score] to (0)
+set [Wave] to (1)
+set [EnemiesLeft] to (0)
+forever
+  repeat ((Wave) * (3))
+    create clone of [Enemy]
+    change [EnemiesLeft] by (1)
+    wait (0.8) seconds
+  wait until <(EnemiesLeft) = (0)>
+  change [Wave] by (1)
+  wait (2) seconds`}],test:"Wave 1 sends 3 enemies, wave 2 sends 6, and so on. After each wave clears there is a 2-second pause and the Wave number goes up."},
+{t:"Add a rapid-fire power-up",goal:"A star that appears every 15 seconds and makes you fire faster for 5 seconds.",do:["Paint a star and rename the sprite Star.","Build the Star script."],
+code:[{lang:"Scratch blocks",file:"Star sprite",text:`when green flag clicked
+hide
+forever
+  wait (15) seconds
+  go to x: (pick random (-200) to (200)) y: (pick random (-150) to (150))
+  show
+  repeat until <touching [Ship]?>
+    turn right (5) degrees
+  hide
+  start sound [magic spell]
+  set [FireDelay] to (0.08)
+  wait (5) seconds
+  set [FireDelay] to (0.25)`}],test:"A spinning star appears. Touching it makes the ship fire much faster for a few seconds."},
+{t:"Make it feel good, then playtest",goal:"Explosions, sounds and a game that is fun for a few minutes.",do:["Paint a second costume for Enemy that looks like an explosion. In the else part of the enemy script, add switch costume to the explosion and wait 0.1 seconds before the score changes. Add switch costume to the first costume at the top of the clone script.","Add a shoot sound to the bullet clone script.","Play to wave 5. If it gets too hard too fast, change the 0.3 in the enemy move block to 0.2.","Give it to your first playtester and note which wave they reach."],
+code:[],test:"A friend reaches wave 3 on their first try and asks to play again."}
+]}
+
+};
+
+var GENERIC={tool:null,setup:["Create a new project in your chosen tool and give it a name.","Save a copy before every big change so you can go back."],
+stretch:["Pick one item from your nice-to-have list.","Add a title screen and a win screen.","Add a second level.","Add a high score."],
+steps:[
+{t:"Set up the project",goal:"A named project with your first folders or sprites ready.",do:["Create the project and name it after your working title.","Scratch: delete the cat and paint placeholder sprites. Godot: make scenes and scripts folders.","Use simple shapes for now. Art can wait."],code:[],test:"You can run an empty project and see your title."},
+{t:"Make the main character move",goal:"Something on screen that you can control.",do:["Pick the simplest movement that fits your controls.","Get it moving before adding anything else.","Tune how fast it moves until it feels good."],code:[],test:"You enjoy just moving around for ten seconds."},
+{t:"Build the first action in your core loop",goal:"The first thing the player does again and again.",do:["Look at your core loop in the plan above and find the first action.","Build only that one action.","Show a clear result on screen when it works."],code:[],test:"The action works every time and you can see what happened."},
+{t:"Add the reward",goal:"Something that tells the player they did well.",do:["Add a score, a coin counter, or a visible change.","Add a sound and a small animation so it feels good."],code:[],test:"Doing the action gives a reward you can see and hear."},
+{t:"Add a challenge",goal:"Something that makes it harder than just doing the action.",do:["Add an enemy, an obstacle, a timer or a limited resource.","Keep it simple. One challenge is enough for now."],code:[],test:"You can fail, and you want to try again."},
+{t:"Add a way to win and lose",goal:"A clear start, a clear end, and a message for each.",do:["Decide what winning means and what losing means.","Show a message and let the player restart."],code:[],test:"Someone can play from start to finish and know when they have won or lost."},
+{t:"Playtest",goal:"Find out what is confusing before adding more.",do:["Give the game to your first playtester without explaining it.","Write down three places they got stuck.","Fix the biggest one."],code:[],test:"A new player gets through without help."},
+{t:"Add your nice-to-haves",goal:"The extras, one at a time.",do:["Pick one item from your nice-to-have list.","Build it, test it, and keep a copy before moving on.","Leave the cut list alone until everything else is finished."],code:[],test:"Your game has one more feature than before and still works."}
+]};
+
+var TWISTS=["Gravity flips every 10 seconds","The hero can only use one button","Day and night change the rules","Everything is made of food","Enemies are friendly until you hit them","The whole map fits on one screen","Two players share one keyboard","Collecting things slows you down","The final boss uses a mechanic you taught earlier","You cannot jump","Every level is a different season","The score is a pet that grows"];
+var LIMITS=["Finish a playable version in 3 weekends","Use only 3 colours of art","No enemies allowed","A full play takes under 5 minutes","At most 5 sprites or objects","Only arrow keys and one other key","Must have a title screen and a win screen","Add one sound for every action"];
+
+var mById={},gById={};
+MECH.forEach(function(m){mById[m.id]=m});
+GEN.forEach(function(g){gById[g.id]=g});
+function $(id){return document.getElementById(id)}
+var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function pips(n){
+  var s='<span class="pips" role="img" aria-label="Effort: '+L[n]+', '+n+' of 5">';
+  for(var i=1;i<=5;i++){s+='<i class="'+(i<=n?'on':'')+'"></i>'}
+  return s+'</span>';
+}
+function plat(p){return '<span class="plat '+p+'">'+PLABEL[p]+'</span>'}
+function effBlock(n){return '<span class="eff">'+pips(n)+'<span>'+L[n]+'</span></span>'}
+
+/* ---------- ladder ---------- */
+function renderLadder(){
+  var out='';
+  for(var n=1;n<=5;n++){
+    var gs=GEN.filter(function(g){return g.effort===n});
+    out+='<div class="rung"><div class="rung-h">'+effBlock(n)+'<span class="time">'+TIMEFULL[n]+', about '+TS[n]+'</span></div><ul class="chips">';
+    gs.forEach(function(g){out+='<li><button type="button" data-goto="'+g.id+'">'+g.name+'</button></li>'});
+    out+='</ul></div>';
+  }
+  $("ladderBox").innerHTML=out;
+}
+
+/* ---------- genres ---------- */
+var F={plat:"all",eff:"all",fav:false};
+function genreCard(g){
+  var chips=g.mech.map(function(id){return '<li><a href="#m-'+id+'">'+mById[id].name+'</a></li>'}).join('');
+  return '<article class="card genre" id="g-'+g.id+'">'+
+    '<div class="g-head"><h3>'+g.name+'</h3>'+(g.fav?'<span class="fav">Favourite-game match</span>':'')+(GUIDES[g.id]?'<span class="ready">Build guide ready</span>':'')+'</div>'+
+    '<p class="insp">Like: '+g.insp+'</p>'+
+    '<p class="pitch">'+g.pitch+'</p>'+
+    '<div class="meta">'+plat(g.platform)+effBlock(g.effort)+'<span class="time">about '+TS[g.effort]+'</span></div>'+
+    '<ul class="chips" aria-label="Mechanics inside">'+chips+'</ul>'+
+    '<dl><dt>First playable</dt><dd>'+g.slice+'</dd><dt>Skills you will practise</dt><dd>'+g.learn+'</dd></dl>'+
+    '<p class="note">'+g.note+'</p>'+
+    '<button class="btn small" type="button" data-plan="'+g.id+'">Plan this one</button>'+
+  '</article>';
+}
+function passes(g){
+  if(F.plat==="scratch"&&g.platform==="godot")return false;
+  if(F.plat==="godot"&&g.platform==="scratch")return false;
+  if(F.eff==="low"&&g.effort>2)return false;
+  if(F.eff==="mid"&&g.effort!==3)return false;
+  if(F.eff==="high"&&g.effort<4)return false;
+  if(F.fav&&!g.fav)return false;
+  return true;
+}
+function renderGenres(){
+  var list=GEN.filter(passes);
+  $("genreGrid").innerHTML=list.map(genreCard).join('');
+  $("count").textContent=list.length===0?"No genres match these filters. Try loosening one.":("Showing "+list.length+" of "+GEN.length+" genres, easiest first.");
+}
+function setPressed(box,v){
+  Array.prototype.forEach.call(box.querySelectorAll("button"),function(b){b.setAttribute("aria-pressed",b.getAttribute("data-v")===v?"true":"false")});
+}
+$("fPlat").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;F.plat=b.getAttribute("data-v");setPressed($("fPlat"),F.plat);renderGenres()});
+$("fEff").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;F.eff=b.getAttribute("data-v");setPressed($("fEff"),F.eff);renderGenres()});
+$("fFav").addEventListener("change",function(){F.fav=$("fFav").checked;renderGenres()});
+
+function resetFilters(){
+  F={plat:"all",eff:"all",fav:false};
+  setPressed($("fPlat"),"all");setPressed($("fEff"),"all");$("fFav").checked=false;
+  renderGenres();
+}
+function goGenre(id){
+  resetFilters();
+  var el=$("g-"+id);
+  if(!el)return;
+  el.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});
+  el.classList.add("flash");
+  setTimeout(function(){el.classList.remove("flash")},2200);
+}
+
+/* ---------- mechanics ---------- */
+function renderMech(){
+  var list=MECH.slice().sort(function(a,b){return a.effort-b.effort});
+  $("mechGrid").innerHTML=list.map(function(m){
+    var used=GEN.filter(function(g){return g.mech.indexOf(m.id)>-1}).map(function(g){return '<li><button type="button" data-goto="'+g.id+'">'+g.name+'</button></li>'}).join('');
+    return '<article class="card mech" id="m-'+m.id+'">'+
+      '<header><h3>'+m.name+'</h3>'+plat(m.best)+'</header>'+
+      '<div class="meta">'+effBlock(m.effort)+'</div>'+
+      '<p>'+m.what+'</p>'+
+      '<div class="tips"><div class="tip"><span class="plat scratch">Scratch</span><span>'+m.scratch+'</span></div>'+
+      '<div class="tip"><span class="plat godot">Godot</span><span>'+m.godot+'</span></div></div>'+
+      '<div class="used"><span class="lab">Used in</span><ul class="chips">'+used+'</ul></div>'+
+    '</article>';
+  }).join('');
+}
+
+/* ---------- toolkit ---------- */
+function renderToolkit(){
+  $("tkBox").innerHTML=TOOLKIT.map(function(g){
+    return '<div class="tk-group"><h3>'+g.group+'</h3><div class="grid">'+
+      g.items.map(function(i){return '<article class="card tk"><h4>'+i.t+'</h4><p>'+i.d+'</p><div class="ask"><b>Ask yourself</b>'+i.q+'</div></article>'}).join('')+
+    '</div></div>';
+  }).join('');
+}
+
+/* ---------- draw ---------- */
+var D={g:"wtc",t:TWISTS[0],l:LIMITS[0]};
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function renderDraw(){
+  var g=gById[D.g];
+  $("slots").innerHTML=
+   '<div class="slot"><span class="lab">Genre</span><span class="val">'+g.name+'</span><span class="sub">Like '+g.insp+'</span>'+
+   '<div class="row">'+plat(g.platform)+effBlock(g.effort)+'</div>'+
+   '<div class="row"><button class="btn ghost small" type="button" data-roll="g" aria-label="Re-roll genre">Re-roll</button></div></div>'+
+   '<div class="slot"><span class="lab">Twist</span><span class="val">'+D.t+'</span><span class="sub">A rule that makes it your own.</span>'+
+   '<div class="row"><button class="btn ghost small" type="button" data-roll="t" aria-label="Re-roll twist">Re-roll</button></div></div>'+
+   '<div class="slot"><span class="lab">Limit</span><span class="val">'+D.l+'</span><span class="sub">A boundary that helps you finish.</span>'+
+   '<div class="row"><button class="btn ghost small" type="button" data-roll="l" aria-label="Re-roll limit">Re-roll</button></div></div>';
+}
+function roll(which){
+  if(which==="g"){var cur=D.g,n;do{n=pick(GEN).id}while(n===cur&&GEN.length>1);D.g=n}
+  if(which==="t"){var ct=D.t,nt;do{nt=pick(TWISTS)}while(nt===ct);D.t=nt}
+  if(which==="l"){var cl=D.l,nl;do{nl=pick(LIMITS)}while(nl===cl);D.l=nl}
+  renderDraw();
+}
+$("slots").addEventListener("click",function(e){var b=e.target.closest("button[data-roll]");if(b)roll(b.getAttribute("data-roll"))});
+$("drawAll").addEventListener("click",function(){roll("g");roll("t");roll("l")});
+$("drawPlan").addEventListener("click",function(){
+  sendToPlan(D.g);
+  if(!$("pPitch").value){$("pPitch").value=gById[D.g].pitch+" Twist: "+D.t+". Limit: "+D.l+"."}
+  savePlan();renderPlanText();
+});
+
+/* ---------- plan ---------- */
+var KEY="gameforge.plan.v1";
+var FIELDS=["pGenre","pPlat","pTitle","pPitch","pLoop","pControls","pMust","pNice","pCut","pArt","pDate","pTester"];
+function fillGenreSelect(){
+  var o='<option value="">Choose a genre</option>';
+  GEN.forEach(function(g){o+='<option value="'+g.id+'">'+g.name+'</option>'});
+  o+='<option value="own">Something of my own</option>';
+  $("pGenre").innerHTML=o;
+}
+function loadPlan(){
+  try{
+    var s=JSON.parse(localStorage.getItem(KEY)||"{}");
+    FIELDS.forEach(function(id){if(typeof s[id]==="string")$(id).value=s[id]});
+  }catch(e){}
+}
+function savePlan(){
+  try{
+    var s={};FIELDS.forEach(function(id){s[id]=$(id).value});
+    localStorage.setItem(KEY,JSON.stringify(s));
+  }catch(e){}
+}
+function lines(v){return v.split("\n").map(function(x){return x.trim()}).filter(Boolean)}
+function platDefault(g){return g.platform==="scratch"?"Scratch":g.platform==="godot"?"Godot":"Not sure yet"}
+function updateHint(){
+  var g=gById[$("pGenre").value];
+  $("planHint").textContent=g?(g.name+": "+L[g.effort]+" effort (about "+TS[g.effort]+"), best in "+PLABEL[g.platform]+". Suggested first playable: "+g.slice):"Choose a genre to see the suggested first playable.";
+  var n=lines($("pMust").value).length;
+  var h=$("mustHint");
+  if(n>5){h.className="hint bad";h.textContent=n+" must-haves is a lot for a first version. Move some to Nice to have, or Cut for now."}
+  else if(n===0){h.className="hint";h.textContent="Aim for 3 to 5 must-haves."}
+  else{h.className="hint";h.textContent=n+" must-have"+(n===1?"":"s")+". "+(n<3?"Add a couple more if the game would feel empty without them.":"That is a good size for a first version.")}
+}
+function bullets(v){var a=lines(v);return a.length?a.map(function(x){return "  - "+x}).join("\n"):"  (not filled in yet)"}
+function one(v){return v.trim()||"(not filled in yet)"}
+function renderPlanText(){
+  var g=gById[$("pGenre").value];
+  var gl=g?(g.name+" ("+L[g.effort]+" effort, about "+TS[g.effort]+")"):($("pGenre").value==="own"?"Something of my own":"(not chosen yet)");
+  var t=[
+    "GAME PLAN: "+one($("pTitle").value),
+    "",
+    "Genre: "+gl,
+    "Built in: "+$("pPlat").value,
+    "Pitch: "+one($("pPitch").value),
+    "Core loop: "+one($("pLoop").value),
+    "Controls: "+one($("pControls").value),
+    "",
+    "Must have:\n"+bullets($("pMust").value),
+    "Nice to have:\n"+bullets($("pNice").value),
+    "Cut for now:\n"+bullets($("pCut").value),
+    "",
+    "Art and sound: "+one($("pArt").value),
+    "First playable by: "+one($("pDate").value),
+    "First playtester: "+one($("pTester").value)
+  ];
+  if(g){t.splice(8,0,"Suggested first playable: "+g.slice)}
+  $("planText").textContent=t.join("\n");
+  updateHint();
+}
+function sendToPlan(id){
+  $("pGenre").value=id;
+  var g=gById[id];
+  if(g)$("pPlat").value=platDefault(g);
+  savePlan();renderPlanText();
+  $("plan").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});
+}
+$("pGenre").addEventListener("change",function(){var g=gById[$("pGenre").value];if(g)$("pPlat").value=platDefault(g)});
+$("planForm").addEventListener("input",function(){savePlan();renderPlanText()});
+$("planForm").addEventListener("change",function(){savePlan();renderPlanText();if(!$("guide").hidden)renderGuide()});
+$("clearPlan").addEventListener("click",function(){
+  FIELDS.forEach(function(id){var el=$(id);el.value=(id==="pPlat")?"Not sure yet":""});
+  savePlan();renderPlanText();$("copyMsg").textContent="Form cleared.";
+});
+$("copyPlan").addEventListener("click",function(){
+  var text=$("planText").textContent,msg=$("copyMsg");
+  function fallback(){
+    var r=document.createRange();r.selectNodeContents($("planText"));
+    var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    msg.textContent="Text selected. Press copy on your keyboard or menu.";
+  }
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){msg.textContent="Plan copied."},fallback);
+    }else{fallback()}
+  }catch(e){fallback()}
+});
+
+/* ---------- global clicks ---------- */
+document.addEventListener("click",function(e){
+  var gt=e.target.closest("[data-goto]");
+  if(gt){goGenre(gt.getAttribute("data-goto"));return}
+  var pl=e.target.closest("[data-plan]");
+  if(pl){sendToPlan(pl.getAttribute("data-plan"))}
+});
+
+/* ---------- build guide ---------- */
+var PKEY="gameforge.progress.v1";
+var prog={steps:{},must:{}};
+var cur={guide:null,key:""};
+function loadProg(){
+  try{var s=JSON.parse(localStorage.getItem(PKEY)||"{}");prog.steps=s.steps||{};prog.must=s.must||{}}catch(e){}
+}
+function saveProg(){try{localStorage.setItem(PKEY,JSON.stringify(prog))}catch(e){}}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmt(s){return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>")}
+
+function codeBlock(c,si,ci){
+  var copy=c.lang==="Scratch blocks"?"":'<button class="btn ghost small" type="button" data-copy="'+si+':'+ci+'">Copy</button>';
+  return '<div class="code"><div class="code-h"><span>'+esc(c.lang)+' · '+esc(c.file)+'</span>'+copy+'</div><pre><code>'+esc(c.text)+'</code></pre></div>';
+}
+function stepHtml(st,i,n,key){
+  var k=key+":"+i,done=!!prog.steps[k];
+  var h='<article class="card step'+(done?' done':'')+'" id="step-'+i+'">'+
+    '<div class="step-h"><div><span class="step-n">Step '+(i+1)+' of '+n+'</span><h3>'+esc(st.t)+'</h3></div>'+
+    '<label class="done-label"><input type="checkbox" data-done="'+k+'"'+(done?' checked':'')+'> Done</label></div>'+
+    '<p class="goal">'+fmt(st.goal)+'</p>';
+  if(st.why)h+='<p class="time">'+fmt(st.why)+'</p>';
+  h+='<ol class="bullets">'+st.do.map(function(d){return '<li>'+fmt(d)+'</li>'}).join('')+'</ol>';
+  (st.code||[]).forEach(function(c,ci){h+=codeBlock(c,i,ci)});
+  h+='<div class="test"><b>Test it</b>'+fmt(st.test)+'</div></article>';
+  return h;
+}
+function lineList(v){return v.split("\n").map(function(x){return x.trim()}).filter(Boolean)}
+function chipList(a){return a.length?'<ul class="chips">'+a.map(function(x){return '<li><span style="display:inline-block;font-size:.85rem;background:var(--soft);border:2px solid var(--line);border-radius:999px;padding:1px 10px">'+esc(x)+'</span></li>'}).join('')+'</ul>':'<p class="time">Nothing listed yet.</p>'}
+
+function renderGuide(){
+  var id=$("pGenre").value,g=gById[id],guide=GUIDES[id],generic=!guide;
+  if(generic)guide=GENERIC;
+  var key=generic?"generic":id;
+  cur={guide:guide,key:key};
+  var title=$("pTitle").value.trim()||(g?g.name:"My game");
+  var chosen=$("pPlat").value;
+  var tool=guide.tool||(chosen!=="Not sure yet"?chosen:"Scratch or Godot");
+  var h='<div class="card guide-sum"><div><span class="step-n">Build guide for</span><h3>'+esc(title)+'</h3></div>'+
+    '<div class="sum-row">'+(tool==="Scratch"?plat("scratch"):tool==="Godot"?plat("godot"):plat("either"))+(g?effBlock(g.effort)+'<span class="time">about '+TS[g.effort]+'</span>':'')+'</div>';
+  var pitch=$("pPitch").value.trim(),loop=$("pLoop").value.trim();
+  if(pitch)h+='<p><b>Pitch.</b> '+esc(pitch)+'</p>';
+  if(loop)h+='<p><b>Core loop.</b> '+esc(loop)+'</p>';
+  if(generic)h+='<div class="notice">A detailed guide for this genre has not been written yet. This is the build order that works for almost any game, and your plan below is the checklist. Detailed guides are ready for: '+Object.keys(GUIDES).map(function(k){return gById[k]?gById[k].name:k}).join(', ')+'.</div>';
+  else if(chosen!=="Not sure yet"&&chosen!==guide.tool)h+='<div class="notice">This guide is written for '+guide.tool+', which suits this genre best. Your plan says '+esc(chosen)+'. You can follow the same steps in the order given, but the code will need translating.</div>';
+  h+='</div>';
+
+  var musts=lineList($("pMust").value);
+  h+='<div class="two"><div class="card box"><h3>Your must-haves</h3>';
+  if(musts.length){
+    h+='<ul class="list">'+musts.map(function(m){var mk=m.toLowerCase();return '<li><input type="checkbox" id="mh-'+esc(mk).replace(/[^a-z0-9]/g,"")+'" data-must="'+esc(mk)+'"'+(prog.must[mk]?' checked':'')+'><label for="mh-'+esc(mk).replace(/[^a-z0-9]/g,"")+'">'+esc(m)+'</label></li>'}).join('')+'</ul><p class="time">Tick each one when your game really does it.</p>';
+  }else h+='<p class="time">You have not listed any must-haves. Go back to the plan and add 3 to 5.</p>';
+  h+='</div><div class="card box"><h3>Leave for later</h3><p class="time">Do not touch these until every step and must-have is done.</p><b>Nice to have</b>'+chipList(lineList($("pNice").value))+'<b>Cut for now</b>'+chipList(lineList($("pCut").value))+'</div></div>';
+
+  h+='<div class="card box" style="margin-bottom:22px"><h3>Before you start</h3><ul class="bullets">'+guide.setup.map(function(s){return '<li>'+fmt(s)+'</li>'}).join('')+'</ul></div>';
+  h+='<div class="prog"><div class="eff"><span id="progText"></span></div><div class="bar" role="progressbar" aria-label="Steps done" aria-valuemin="0" aria-valuemax="'+guide.steps.length+'" id="progBar"><i id="progFill"></i></div></div>';
+  h+='<div class="steps">'+guide.steps.map(function(st,i){return stepHtml(st,i,guide.steps.length,key)}).join('')+'</div>';
+  if(guide.stretch&&guide.stretch.length){
+    h+='<div class="card box" style="margin-top:24px"><h3>When every step is done</h3><p class="time">Stretch ideas, easiest first:</p><ul class="bullets">'+guide.stretch.map(function(s){return '<li>'+fmt(s)+'</li>'}).join('')+'</ul></div>';
+  }
+  $("guideBody").innerHTML=h;
+  updateProgress();
+}
+function updateProgress(){
+  if(!cur.guide)return;
+  var n=cur.guide.steps.length,d=0;
+  for(var i=0;i<n;i++){if(prog.steps[cur.key+":"+i])d++}
+  var t=$("progText"),f=$("progFill"),b=$("progBar");
+  if(t)t.textContent=d+" of "+n+" steps done";
+  if(f)f.style.width=Math.round(d/n*100)+"%";
+  if(b)b.setAttribute("aria-valuenow",d);
+}
+function showGuide(scroll){
+  if(!$("pGenre").value){$("guideMsg").textContent="Choose a genre in your plan first, then try again.";return false}
+  $("guideMsg").textContent="";
+  $("guide").hidden=false;$("tabGuide").hidden=false;
+  renderGuide();
+  try{localStorage.setItem("gameforge.guide","1")}catch(e){}
+  if(scroll)$("guide").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});
+  return true;
+}
+$("makeGuide").addEventListener("click",function(){showGuide(true)});
+$("guideBody").addEventListener("change",function(e){
+  var d=e.target.getAttribute("data-done"),m=e.target.getAttribute("data-must");
+  if(d){
+    if(e.target.checked)prog.steps[d]=true;else delete prog.steps[d];
+    var card=e.target.closest(".step");if(card)card.classList.toggle("done",e.target.checked);
+    saveProg();updateProgress();
+  }else if(m){
+    if(e.target.checked)prog.must[m]=true;else delete prog.must[m];
+    saveProg();
+  }
+});
+$("guideBody").addEventListener("click",function(e){
+  var b=e.target.closest("[data-copy]");
+  if(!b||!cur.guide)return;
+  var p=b.getAttribute("data-copy").split(":"),text=cur.guide.steps[+p[0]].code[+p[1]].text;
+  function ok(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},1500)}
+  function fb(){
+    var pre=b.closest(".code").querySelector("pre"),r=document.createRange();
+    r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    b.textContent="Selected";setTimeout(function(){b.textContent="Copy"},1800);
+  }
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fb)}else{fb()}
+  }catch(err){fb()}
+});
+
+/* ---------- init ---------- */
+GEN.sort(function(a,b){return a.effort-b.effort});
+renderLadder();renderGenres();renderMech();renderToolkit();renderDraw();
+fillGenreSelect();loadPlan();renderPlanText();loadProg();
+try{if(localStorage.getItem("gameforge.guide")==="1"&&$("pGenre").value)showGuide(false)}catch(e){}
+})();
+</script>
