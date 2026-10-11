@@ -1,0 +1,512 @@
+<title>Godot Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lilita+One&display=swap">
+<style>
+/* Layout: title + world map of 7 worlds, sticky world tabs, each world a stack of collapsible lesson cards, cheat sheet at the end */
+:root{
+  --bg:#e9edf5; --surface:#ffffff; --soft:#f1f4fb; --ink:#12183a; --muted:#4d5578;
+  --line:#12183a; --shadow:#12183a; --pop:#ffd23f; --godot:#478cbf; --scratch:#ff8c1a;
+  --good:#2f9e5b; --on-pop:#12183a; --focus:#2b59ff; --warn:#b4231f;
+  --display:"Lilita One","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1128; --surface:#181e40; --soft:#10163a; --ink:#eef1ff; --muted:#aab2d8;
+    --line:#4a54a0; --shadow:#04061a; --good:#5fd38d; --focus:#8fb0ff; --warn:#ff8f8a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1128; --surface:#181e40; --soft:#10163a; --ink:#eef1ff; --muted:#aab2d8;
+  --line:#4a54a0; --shadow:#04061a; --good:#5fd38d; --focus:#8fb0ff; --warn:#ff8f8a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+h1,h2,h3,h4{font-family:var(--display);font-weight:400;margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+a{color:inherit;font-weight:700}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:60rem;margin:0 auto;padding-inline:16px;padding-block:8px 64px}
+
+.top{padding-block:28px 18px;display:grid;gap:10px}
+.eyebrow{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:clamp(2.6rem,9vw,4.4rem)}
+.lede{max-width:42rem;font-size:1.1rem;color:var(--muted)}
+
+/* world map */
+.map{display:grid;gap:14px;margin-top:8px}
+.map-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,12.5rem),1fr));gap:12px}
+.stop{display:grid;gap:4px;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:3px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:4px 4px 0 var(--shadow);cursor:pointer;text-decoration:none}
+.stop:hover{background:var(--pop);color:var(--on-pop)}
+.stop .w{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.stop:hover .w{color:var(--on-pop)}
+.stop .n{font-family:var(--display);font-size:1.15rem;line-height:1.15}
+.stop .c{font-size:.85rem;font-variant-numeric:tabular-nums}
+.stop.done{border-color:var(--good)}
+.stop.done .c::before{content:"\2714  ";color:var(--good)}
+.overall{display:grid;gap:6px}
+.bar{height:16px;border:3px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pop);width:0}
+.overall .lab{font-family:var(--display);font-size:1rem;font-variant-numeric:tabular-nums}
+
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:3px solid var(--line)}
+.tabs-in{max-width:60rem;margin:0 auto;padding:10px 16px;display:flex;gap:8px;overflow-x:auto}
+.tabs a{white-space:nowrap;text-decoration:none;font-family:var(--display);font-weight:400;font-size:1rem;padding:5px 13px;border:3px solid var(--line);border-radius:10px;background:var(--surface)}
+.tabs a:hover{background:var(--pop);color:var(--on-pop)}
+
+.world{padding-block:40px 4px;scroll-margin-top:70px}
+.world-head{display:grid;gap:6px;margin-bottom:18px;max-width:44rem}
+.world-head .w{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--godot);font-weight:700}
+.world-head h2{font-size:clamp(1.8rem,5vw,2.5rem)}
+.world-head p{color:var(--muted)}
+.lessons{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.lessons>*,.world,.sheet>*{min-width:0}
+
+/* lesson */
+details.lesson{background:var(--surface);border:3px solid var(--line);border-radius:14px;box-shadow:5px 5px 0 var(--shadow);scroll-margin-top:72px}
+details.lesson[open]{box-shadow:6px 6px 0 var(--shadow)}
+details.lesson > summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px}
+details.lesson > summary::-webkit-details-marker{display:none}
+.num{font-family:var(--display);font-size:1.1rem;width:2.4rem;height:2.4rem;display:grid;place-items:center;border:3px solid var(--line);border-radius:10px;background:var(--soft);font-variant-numeric:tabular-nums}
+.lesson.is-done .num{background:var(--good);color:var(--surface);border-color:var(--good)}
+.sum-t{display:grid;gap:2px;min-width:0}
+.sum-t h3{font-size:1.3rem}
+.sum-t span{font-size:.88rem;color:var(--muted)}
+.chev{font-family:var(--display);font-size:1.4rem;transition:transform .15s}
+details[open] .chev{transform:rotate(90deg)}
+@media (prefers-reduced-motion: reduce){.chev{transition:none}}
+.body{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:4px 18px 18px;border-top:3px dashed var(--line);padding-top:16px;min-width:0}
+.goal{font-weight:700;font-size:1.05rem}
+.body p{max-width:44rem}
+.steps{margin:0;padding-left:1.4rem;display:grid;gap:8px;max-width:46rem}
+.steps li::marker{font-family:var(--display);color:var(--godot)}
+.callout{display:grid;gap:4px;border:2px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--soft)}
+.callout b.k{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+.callout.scratch b.k{color:var(--scratch)}
+.callout.why b.k{color:var(--godot)}
+.callout.check{border-style:dashed}
+.callout.check b.k{color:var(--good)}
+.callout.challenge{background:var(--surface);border-width:3px}
+.callout.challenge b.k{color:var(--ink)}
+.tree{margin:0;font-family:var(--mono);font-size:.9rem;background:var(--soft);border:2px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.code{border:3px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.code-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 10px;background:var(--soft);border-bottom:3px solid var(--line);font-size:.85rem;font-weight:700}
+.code pre{margin:0;background:var(--surface);overflow-x:auto;padding:12px;font-family:var(--mono);font-size:.85rem;line-height:1.5;tab-size:4}
+code{font-family:var(--mono);font-size:.88em;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.code pre code{background:none;border:0;padding:0;font-size:inherit}
+.btn{font-family:var(--display);font-size:1rem;background:var(--pop);color:var(--on-pop);border:3px solid var(--line);border-radius:10px;padding:5px 13px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.small{font-size:.85rem;padding:2px 10px;box-shadow:2px 2px 0 var(--shadow)}
+.btn.ghost{background:var(--surface);color:var(--ink)}
+.finish{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:3px dashed var(--line);padding-top:14px}
+.finish label{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+.finish input{width:24px;height:24px;accent-color:var(--good)}
+
+/* tables */
+.tbl{overflow-x:auto;border:2px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+
+/* editor diagram */
+.diagram{overflow-x:auto;border:2px solid var(--line);border-radius:10px;background:var(--soft);padding:10px}
+.diagram svg{display:block;width:100%;min-width:520px;height:auto}
+.dg-panel{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.dg-view{fill:var(--bg);stroke:var(--line);stroke-width:2}
+.dg-bar{fill:var(--godot);stroke:var(--line);stroke-width:2}
+.dg-t{fill:var(--ink);font-family:var(--body);font-size:13px;font-weight:700}
+.dg-s{fill:var(--muted);font-family:var(--body);font-size:11px}
+.dg-bt{fill:var(--surface);font-family:var(--body);font-size:12px;font-weight:700}
+
+.sheet{display:grid;gap:22px}
+.resources{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr));gap:14px}
+.res{background:var(--surface);border:3px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;align-content:start}
+.res h4{font-size:1.1rem}
+.res p{font-size:.92rem;color:var(--muted)}
+.card{background:var(--surface);border:3px solid var(--line);border-radius:14px;box-shadow:5px 5px 0 var(--shadow);padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+.card h3{font-size:1.4rem}
+.foot{margin-top:40px;color:var(--muted);font-size:.9rem;max-width:44rem}
+.msg{font-size:.88rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">A Godot 4.7 course for Scratch coders</p>
+    <h1>Godot Academy</h1>
+    <p class="lede">Seven worlds that take you from installing Godot to a finished platformer level of your own design. Each lesson builds on the one before, so work through them in order and tick each one off when it works.</p>
+  </header>
+  <section class="map" aria-label="Course map">
+    <div class="overall"><span class="lab" id="overallLab"></span><div class="bar" role="progressbar" aria-label="Lessons finished" aria-valuemin="0" id="overallBar"><i id="overallFill"></i></div></div>
+    <div class="map-row" id="mapRow"></div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Worlds"><div class="tabs-in" id="tabsIn"></div></nav>
+
+<main class="wrap">
+  <div id="worlds"></div>
+
+  <section class="world" id="cheat" aria-labelledby="h-cheat">
+    <div class="world-head"><span class="w">Keep this open</span><h2 id="h-cheat">Cheat sheet</h2><p>Shortcuts, GDScript at a glance, and where to learn more.</p></div>
+    <div class="sheet">
+      <div class="card"><h3>Keyboard shortcuts</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Do this</th><th>Windows / Linux</th><th>Mac</th></tr></thead>
+          <tbody>
+            <tr><td>Run the whole game</td><td><code>F5</code></td><td><code>Cmd+B</code></td></tr>
+            <tr><td>Run the scene you have open</td><td><code>F6</code></td><td><code>Cmd+R</code></td></tr>
+            <tr><td>Stop the game</td><td><code>F8</code></td><td><code>Cmd+.</code></td></tr>
+            <tr><td>Save the scene</td><td><code>Ctrl+S</code></td><td><code>Cmd+S</code></td></tr>
+            <tr><td>Add a child node</td><td><code>Ctrl+A</code></td><td><code>Cmd+A</code></td></tr>
+            <tr><td>Duplicate the selected node</td><td><code>Ctrl+D</code></td><td><code>Cmd+D</code></td></tr>
+            <tr><td>Select, move, rotate, scale tools</td><td><code>Q</code> <code>W</code> <code>E</code> <code>S</code></td><td><code>Q</code> <code>W</code> <code>E</code> <code>S</code></td></tr>
+            <tr><td>Comment or uncomment lines</td><td><code>Ctrl+K</code></td><td><code>Cmd+K</code></td></tr>
+            <tr><td>Show code suggestions</td><td><code>Ctrl+Space</code></td><td><code>Ctrl+Space</code></td></tr>
+            <tr><td>Open the help for a word in code</td><td><code>Ctrl</code> + click</td><td><code>Cmd</code> + click</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card"><h3>GDScript at a glance</h3><div id="cheatCode"></div></div>
+      <div class="card"><h3>Body types: which one do I need?</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Node</th><th>Use it for</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>CharacterBody2D</code></td><td>Things your code moves, which stop at walls</td><td>The player, enemies, a car</td></tr>
+            <tr><td><code>StaticBody2D</code></td><td>Solid things that never move</td><td>Ground, walls, platforms</td></tr>
+            <tr><td><code>RigidBody2D</code></td><td>Things the physics engine pushes around</td><td>Crates, balls, falling rocks</td></tr>
+            <tr><td><code>Area2D</code></td><td>Invisible zones that notice when something enters</td><td>Coins, spikes, the goal flag, a kill zone</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div><h3 style="font-size:1.4rem;margin-bottom:12px">Keep learning</h3>
+        <div class="resources">
+          <div class="res"><h4>Godot docs: Getting started</h4><p>The official step-by-step guides, including "Your first 2D game".</p><a href="https://docs.godotengine.org/en/stable/getting_started/introduction/index.html" target="_blank" rel="noopener">docs.godotengine.org</a></div>
+          <div class="res"><h4>Learn GDScript From Zero</h4><p>A free interactive app by GDQuest that teaches GDScript in the browser, one small exercise at a time.</p><a href="https://gdquest.github.io/learn-gdscript/" target="_blank" rel="noopener">gdquest.github.io/learn-gdscript</a></div>
+          <div class="res"><h4>Kenney assets</h4><p>Free CC0 art and sound packs for platformers, farms, racing and more.</p><a href="https://kenney.nl/assets" target="_blank" rel="noopener">kenney.nl/assets</a></div>
+          <div class="res"><h4>Godot class reference</h4><p>Every node and function explained. The same pages open when you Ctrl+click a word in the script editor.</p><a href="https://docs.godotengine.org/en/stable/classes/index.html" target="_blank" rel="noopener">Class reference</a></div>
+        </div>
+      </div>
+    </div>
+    <p class="foot">Written for Godot 4.7. All the code on this page has been compiled in Godot 4.7.2. Menu names can move slightly between versions, so if a button is not where a step says, search the Inspector or the menus for its name. Progress ticks are saved in this browser only.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var CODE={"level": "extends Node2D\n\nfunc _ready() -> void:\n\tGame.reset()", "player_v2": "extends CharacterBody2D\n\nconst SPEED := 160.0\nconst JUMP_VELOCITY := -330.0\nconst GRAVITY := 900.0\n\n@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D\n\nfunc _physics_process(delta: float) -> void:\n\tif not is_on_floor():\n\t\tvelocity.y += GRAVITY * delta\n\n\tif Input.is_action_just_pressed(\"jump\") and is_on_floor():\n\t\tvelocity.y = JUMP_VELOCITY\n\n\tvar direction := Input.get_axis(\"move_left\", \"move_right\")\n\tif direction != 0.0:\n\t\tvelocity.x = direction * SPEED\n\telse:\n\t\tvelocity.x = move_toward(velocity.x, 0.0, SPEED)\n\n\tmove_and_slide()\n\t_update_animation(direction)\n\nfunc _update_animation(direction: float) -> void:\n\tif direction != 0.0:\n\t\tsprite.flip_h = direction < 0.0\n\tif not is_on_floor():\n\t\tsprite.play(\"jump\")\n\telif direction != 0.0:\n\t\tsprite.play(\"run\")\n\telse:\n\t\tsprite.play(\"idle\")", "mover": "extends Sprite2D\n\nvar speed := 200.0\n\nfunc _process(delta: float) -> void:\n\tposition.x += speed * delta\n\trotation += 2.0 * delta\n\tif position.x > 640.0:\n\t\tposition.x = 0.0", "coin_final": "extends Area2D\n\n@onready var pickup_sound: AudioStreamPlayer = $PickupSound\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\nfunc _on_body_entered(body: Node2D) -> void:\n\tif body.is_in_group(\"player\"):\n\t\tGame.add_coin()\n\t\tset_deferred(\"monitoring\", false)\n\t\thide()\n\t\tpickup_sound.play()\n\t\tawait pickup_sound.finished\n\t\tqueue_free()", "player_group": "func _ready() -> void:\n\tadd_to_group(\"player\")", "enemy": "extends CharacterBody2D\n\nconst SPEED := 40.0\nconst GRAVITY := 900.0\n\nvar direction := -1.0\n\n@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D\n@onready var floor_check: RayCast2D = $FloorCheck\n@onready var hit_area: Area2D = $HitArea\n\nfunc _ready() -> void:\n\thit_area.body_entered.connect(_on_hit_area_body_entered)\n\nfunc _physics_process(delta: float) -> void:\n\tvelocity.y += GRAVITY * delta\n\tvelocity.x = direction * SPEED\n\tmove_and_slide()\n\tif is_on_floor() and (is_on_wall() or not floor_check.is_colliding()):\n\t\tdirection = -direction\n\t\tfloor_check.position.x = -floor_check.position.x\n\tsprite.flip_h = direction > 0.0\n\nfunc _on_hit_area_body_entered(body: Node2D) -> void:\n\tif not body.is_in_group(\"player\"):\n\t\treturn\n\tif body.velocity.y > 0.0 and body.global_position.y < global_position.y - 4.0:\n\t\tbody.bounce()\n\t\tqueue_free()\n\telse:\n\t\tbody.die()", "hud": "extends CanvasLayer\n\n@onready var coin_label: Label = $CoinLabel\n\nfunc _ready() -> void:\n\tGame.coins_changed.connect(_on_coins_changed)\n\t_on_coins_changed(Game.coins)\n\nfunc _on_coins_changed(total: int) -> void:\n\tcoin_label.text = \"Coins: %d\" % total", "car": "extends CharacterBody2D\n\nconst ACCEL := 400.0\nconst MAX_SPEED := 300.0\nconst TURN_SPEED := 2.5\nconst FRICTION := 1.2\n\nvar speed := 0.0\n\nfunc _physics_process(delta: float) -> void:\n\tvar throttle := Input.get_axis(\"move_down\", \"move_up\")\n\tvar steer := Input.get_axis(\"move_left\", \"move_right\")\n\tspeed += throttle * ACCEL * delta\n\tspeed = lerpf(speed, 0.0, FRICTION * delta)\n\tspeed = clampf(speed, -MAX_SPEED * 0.4, MAX_SPEED)\n\trotation += steer * TURN_SPEED * delta * clampf(speed / 150.0, -1.0, 1.0)\n\tvelocity = Vector2.UP.rotated(rotation) * speed\n\tmove_and_slide()", "input_test": "extends Sprite2D\n\nconst SPEED := 250.0\n\nfunc _process(delta: float) -> void:\n\tvar direction := Input.get_axis(\"move_left\", \"move_right\")\n\tposition.x += direction * SPEED * delta\n\tif Input.is_action_just_pressed(\"jump\"):\n\t\tprint(\"Jump pressed!\")", "game": "extends Node\n\nsignal coins_changed(total: int)\n\nvar coins := 0\n\nfunc add_coin() -> void:\n\tcoins += 1\n\tcoins_changed.emit(coins)\n\nfunc reset() -> void:\n\tcoins = 0\n\tcoins_changed.emit(coins)", "player_bounce": "func bounce() -> void:\n\tvelocity.y = JUMP_VELOCITY * 0.7", "hazard": "extends Area2D\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\nfunc _on_body_entered(body: Node2D) -> void:\n\tif body.has_method(\"die\"):\n\t\tbody.die()", "cheatsheet": "extends Node2D\n\n# Variables\nvar score := 0                  # whole number (int)\nvar speed := 120.5              # decimal number (float)\nvar hero_name := \"Pip\"          # text (String)\nvar alive := true               # true or false (bool)\nvar items := [\"key\", \"map\"]     # a list (Array)\nvar stats := {\"hp\": 3}          # names and values (Dictionary)\nconst MAX_HP := 5               # a value that never changes\n\n# A setting you can change in the Inspector\n@export var jump_power := 300.0\n\n# Find a child node when the scene starts\n@onready var sprite: Sprite2D = $Sprite2D\n\nfunc _ready() -> void:\n\t# Runs once, when the node appears\n\tif score >= 10 and alive:\n\t\tprint(\"Great!\")\n\telif score > 0:\n\t\tprint(\"Keep going\")\n\telse:\n\t\tprint(\"Start collecting\")\n\n\tfor item in items:\n\t\tprint(item)\n\n\tvar total := add(2, 3)\n\tprint(total)\n\nfunc _process(delta: float) -> void:\n\t# Runs every frame, like a forever loop\n\tposition.x += speed * delta\n\nfunc add(a: int, b: int) -> int:\n\treturn a + b", "player_final": "extends CharacterBody2D\n\nconst SPEED := 160.0\nconst ACCEL := 1200.0\nconst FRICTION := 1400.0\nconst JUMP_VELOCITY := -330.0\nconst GRAVITY := 900.0\nconst FALL_GRAVITY := 1400.0\nconst COYOTE_TIME := 0.1\nconst JUMP_BUFFER := 0.12\n\nvar coyote_left := 0.0\nvar buffer_left := 0.0\n\n@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D\n@onready var jump_sound: AudioStreamPlayer = $JumpSound\n\nfunc _ready() -> void:\n\tadd_to_group(\"player\")\n\nfunc _physics_process(delta: float) -> void:\n\tif is_on_floor():\n\t\tcoyote_left = COYOTE_TIME\n\telse:\n\t\tcoyote_left -= delta\n\t\tvar gravity := GRAVITY if velocity.y < 0.0 else FALL_GRAVITY\n\t\tvelocity.y += gravity * delta\n\n\tbuffer_left -= delta\n\tif Input.is_action_just_pressed(\"jump\"):\n\t\tbuffer_left = JUMP_BUFFER\n\n\tif buffer_left > 0.0 and coyote_left > 0.0:\n\t\tvelocity.y = JUMP_VELOCITY\n\t\tbuffer_left = 0.0\n\t\tcoyote_left = 0.0\n\t\tjump_sound.play()\n\n\tif Input.is_action_just_released(\"jump\") and velocity.y < 0.0:\n\t\tvelocity.y *= 0.5\n\n\tvar direction := Input.get_axis(\"move_left\", \"move_right\")\n\tif direction != 0.0:\n\t\tvelocity.x = move_toward(velocity.x, direction * SPEED, ACCEL * delta)\n\telse:\n\t\tvelocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)\n\n\tmove_and_slide()\n\t_update_animation(direction)\n\nfunc _update_animation(direction: float) -> void:\n\tif direction != 0.0:\n\t\tsprite.flip_h = direction < 0.0\n\tif not is_on_floor():\n\t\tsprite.play(\"jump\")\n\telif direction != 0.0:\n\t\tsprite.play(\"run\")\n\telse:\n\t\tsprite.play(\"idle\")\n\nfunc bounce() -> void:\n\tvelocity.y = JUMP_VELOCITY * 0.7\n\nfunc die() -> void:\n\tset_physics_process(false)\n\tsprite.modulate = Color.RED\n\tawait get_tree().create_timer(0.5).timeout\n\tget_tree().reload_current_scene()", "flag": "extends Area2D\n\n@export_file(\"*.tscn\") var next_level := \"\"\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\nfunc _on_body_entered(body: Node2D) -> void:\n\tif not body.is_in_group(\"player\"):\n\t\treturn\n\tif next_level == \"\":\n\t\tget_tree().change_scene_to_file.call_deferred(\"res://scenes/win_screen.tscn\")\n\telse:\n\t\tget_tree().change_scene_to_file.call_deferred(next_level)", "coin_v1": "extends Area2D\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\nfunc _on_body_entered(body: Node2D) -> void:\n\tif body.is_in_group(\"player\"):\n\t\tGame.add_coin()\n\t\tqueue_free()", "topdown": "extends CharacterBody2D\n\nconst SPEED := 100.0\n\n@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D\n\nfunc _physics_process(_delta: float) -> void:\n\tvar direction := Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")\n\tvelocity = direction * SPEED\n\tmove_and_slide()\n\tif direction == Vector2.ZERO:\n\t\tsprite.play(\"idle\")\n\telif absf(direction.x) > absf(direction.y):\n\t\tsprite.play(\"walk_side\")\n\t\tsprite.flip_h = direction.x < 0.0\n\telif direction.y < 0.0:\n\t\tsprite.play(\"walk_up\")\n\telse:\n\t\tsprite.play(\"walk_down\")", "menu": "extends Control\n\n@export_file(\"*.tscn\") var go_to := \"res://levels/level_1.tscn\"\n\n@onready var button: Button = $Button\n\nfunc _ready() -> void:\n\tbutton.pressed.connect(_on_button_pressed)\n\tbutton.grab_focus()\n\nfunc _on_button_pressed() -> void:\n\tget_tree().change_scene_to_file(go_to)", "hello": "extends Node2D\n\nvar player_name := \"Robo\"\nvar lives := 3\n\nfunc _ready() -> void:\n\tprint(\"Hello, \" + player_name + \"!\")\n\tprint(\"You have \", lives, \" lives.\")\n\tif lives > 2:\n\t\tprint(\"Plenty of lives left.\")\n\telse:\n\t\tprint(\"Be careful!\")\n\tsay_twice(\"Godot is fun\")\n\nfunc say_twice(message: String) -> void:\n\tprint(message)\n\tprint(message)", "player_v1": "extends CharacterBody2D\n\nconst SPEED := 160.0\nconst JUMP_VELOCITY := -330.0\nconst GRAVITY := 900.0\n\nfunc _physics_process(delta: float) -> void:\n\tif not is_on_floor():\n\t\tvelocity.y += GRAVITY * delta\n\n\tif Input.is_action_just_pressed(\"jump\") and is_on_floor():\n\t\tvelocity.y = JUMP_VELOCITY\n\n\tvar direction := Input.get_axis(\"move_left\", \"move_right\")\n\tif direction != 0.0:\n\t\tvelocity.x = direction * SPEED\n\telse:\n\t\tvelocity.x = move_toward(velocity.x, 0.0, SPEED)\n\n\tmove_and_slide()", "player_v3": "extends CharacterBody2D\n\nconst SPEED := 160.0\nconst ACCEL := 1200.0\nconst FRICTION := 1400.0\nconst JUMP_VELOCITY := -330.0\nconst GRAVITY := 900.0\nconst FALL_GRAVITY := 1400.0\nconst COYOTE_TIME := 0.1\nconst JUMP_BUFFER := 0.12\n\nvar coyote_left := 0.0\nvar buffer_left := 0.0\n\n@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D\n\nfunc _physics_process(delta: float) -> void:\n\tif is_on_floor():\n\t\tcoyote_left = COYOTE_TIME\n\telse:\n\t\tcoyote_left -= delta\n\t\tvar gravity := GRAVITY if velocity.y < 0.0 else FALL_GRAVITY\n\t\tvelocity.y += gravity * delta\n\n\tbuffer_left -= delta\n\tif Input.is_action_just_pressed(\"jump\"):\n\t\tbuffer_left = JUMP_BUFFER\n\n\tif buffer_left > 0.0 and coyote_left > 0.0:\n\t\tvelocity.y = JUMP_VELOCITY\n\t\tbuffer_left = 0.0\n\t\tcoyote_left = 0.0\n\n\tif Input.is_action_just_released(\"jump\") and velocity.y < 0.0:\n\t\tvelocity.y *= 0.5\n\n\tvar direction := Input.get_axis(\"move_left\", \"move_right\")\n\tif direction != 0.0:\n\t\tvelocity.x = move_toward(velocity.x, direction * SPEED, ACCEL * delta)\n\telse:\n\t\tvelocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)\n\n\tmove_and_slide()\n\t_update_animation(direction)\n\nfunc _update_animation(direction: float) -> void:\n\tif direction != 0.0:\n\t\tsprite.flip_h = direction < 0.0\n\tif not is_on_floor():\n\t\tsprite.play(\"jump\")\n\telif direction != 0.0:\n\t\tsprite.play(\"run\")\n\telse:\n\t\tsprite.play(\"idle\")", "player_die": "func die() -> void:\n\tset_physics_process(false)\n\tsprite.modulate = Color.RED\n\tawait get_tree().create_timer(0.5).timeout\n\tget_tree().reload_current_scene()"};
+
+var EDITOR_SVG='<div class="diagram" role="img" aria-label="Diagram of the Godot editor: Scene dock top left, FileSystem bottom left, viewport in the middle, Inspector on the right, bottom panel with Output, and run buttons top right."><svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg">'+
+'<rect class="dg-bar" x="10" y="10" width="700" height="34" rx="6"/>'+
+'<text class="dg-bt" x="22" y="32">Scene  Project  Debug  Editor  Help</text>'+
+'<text class="dg-bt" x="300" y="32">2D   3D   Script   Game   AssetLib</text>'+
+'<text class="dg-bt" x="560" y="32">Run buttons  ▶  ■</text>'+
+'<rect class="dg-panel" x="10" y="52" width="160" height="160" rx="6"/><text class="dg-t" x="20" y="74">Scene dock</text><text class="dg-s" x="20" y="92">The nodes in this scene,</text><text class="dg-s" x="20" y="106">shown as a tree</text>'+
+'<rect class="dg-panel" x="10" y="220" width="160" height="170" rx="6"/><text class="dg-t" x="20" y="242">FileSystem</text><text class="dg-s" x="20" y="260">Every file in your project.</text><text class="dg-s" x="20" y="274">res:// is the project folder</text>'+
+'<rect class="dg-view" x="178" y="52" width="358" height="250" rx="6"/><text class="dg-t" x="190" y="74">Viewport</text><text class="dg-s" x="190" y="92">Where you arrange your scene.</text><text class="dg-s" x="190" y="106">Scroll to zoom, middle-drag to pan</text>'+
+'<rect class="dg-panel" x="178" y="310" width="358" height="80" rx="6"/><text class="dg-t" x="190" y="332">Bottom panel</text><text class="dg-s" x="190" y="350">Output (messages and errors), Debugger,</text><text class="dg-s" x="190" y="364">Audio, Animation, SpriteFrames, TileMap</text>'+
+'<rect class="dg-panel" x="544" y="52" width="166" height="338" rx="6"/><text class="dg-t" x="554" y="74">Inspector</text><text class="dg-s" x="554" y="92">Settings for the node</text><text class="dg-s" x="554" y="106">you have selected.</text><text class="dg-t" x="554" y="140">Node tab</text><text class="dg-s" x="554" y="158">Signals and groups</text>'+
+'</svg></div>';
+
+var SCRATCH_TABLE='<div class="tbl"><table><thead><tr><th>In Scratch</th><th>In Godot</th></tr></thead><tbody>'+
+'<tr><td>Sprite</td><td>A scene made of nodes, like a Player scene</td></tr>'+
+'<tr><td>Stage</td><td>The main scene, often a level</td></tr>'+
+'<tr><td>Costume</td><td>A texture, or a frame in an animation</td></tr>'+
+'<tr><td>Code blocks</td><td>A script written in GDScript</td></tr>'+
+'<tr><td>when green flag clicked</td><td><code>_ready()</code>, which runs once at the start</td></tr>'+
+'<tr><td>forever</td><td><code>_process()</code> or <code>_physics_process()</code>, which run every frame</td></tr>'+
+'<tr><td>Variable</td><td><code>var</code></td></tr>'+
+'<tr><td>broadcast and when I receive</td><td>Signals</td></tr>'+
+'<tr><td>create clone of</td><td><code>instantiate()</code> a scene, then <code>add_child()</code></td></tr>'+
+'<tr><td>touching?</td><td>Collision shapes, and an Area2D\'s <code>body_entered</code> signal</td></tr>'+
+'<tr><td>x position and y position</td><td><code>position.x</code> and <code>position.y</code>. In Godot, y grows downwards</td></tr>'+
+'</tbody></table></div>';
+
+var SOURCES_TABLE='<div class="tbl"><table><thead><tr><th>Site</th><th>What it has</th><th>Licence</th></tr></thead><tbody>'+
+'<tr><td><a href="https://kenney.nl/assets" target="_blank" rel="noopener">kenney.nl</a></td><td>Complete packs: Pixel Platformer, Tiny Town, Racing Pack, plus sound packs like Interface Sounds and Music Jingles</td><td>CC0: use for anything</td></tr>'+
+'<tr><td><a href="https://opengameart.org" target="_blank" rel="noopener">opengameart.org</a></td><td>Art, music and sound from many artists</td><td>Varies: check each one</td></tr>'+
+'<tr><td><a href="https://itch.io/game-assets/free" target="_blank" rel="noopener">itch.io free assets</a></td><td>Huge range of art packs, many in pixel style</td><td>Varies: read the page</td></tr>'+
+'<tr><td><a href="https://sfxr.me" target="_blank" rel="noopener">sfxr.me</a></td><td>Make your own retro sound effects with buttons like Jump and Pickup</td><td>Yours to use</td></tr>'+
+'<tr><td><a href="https://www.piskelapp.com" target="_blank" rel="noopener">piskelapp.com</a></td><td>Draw your own pixel art and animations in the browser</td><td>Yours to use</td></tr>'+
+'<tr><td><a href="https://freesound.org" target="_blank" rel="noopener">freesound.org</a></td><td>Real recorded sounds. Needs an account, so ask a parent</td><td>Varies: CC0 or credit needed</td></tr>'+
+'</tbody></table></div>';
+
+var LAYERS_TABLE='<div class="tbl"><table><thead><tr><th>Thing</th><th>Layer (what I am)</th><th>Mask (what I bump into or notice)</th></tr></thead><tbody>'+
+'<tr><td>Tiles (TileSet physics layer)</td><td>1 World</td><td>none needed</td></tr>'+
+'<tr><td>Player</td><td>2 Player</td><td>1 World</td></tr>'+
+'<tr><td>Enemy body</td><td>3 Enemies</td><td>1 World</td></tr>'+
+'<tr><td>Coins, spikes, kill zone, flag, enemy HitArea</td><td>none</td><td>2 Player</td></tr>'+
+'</tbody></table></div>';
+
+var ERRORS_TABLE='<div class="tbl"><table><thead><tr><th>What you see</th><th>What it usually means</th></tr></thead><tbody>'+
+'<tr><td>Invalid access to property or key on a base object of type null instance</td><td>A <code>$NodeName</code> path is wrong. The node was renamed, moved, or the capitals do not match. Check the name in the Scene dock.</td></tr>'+
+'<tr><td>Identifier "Game" not declared in the current scope</td><td>The Autoload is missing or has a different name. Check Project Settings, Globals.</td></tr>'+
+'<tr><td>Mixed use of tabs and spaces for indentation</td><td>Some lines use spaces. Select all and use Edit, Indentation, Convert Indent to Tabs.</td></tr>'+
+'<tr><td>Expected indented block, or Unexpected indent</td><td>Lines inside a <code>func</code>, <code>if</code> or <code>for</code> need one more Tab than the line above them.</td></tr>'+
+'<tr><td>Nothing happens when I touch a coin</td><td>Check the coin\'s Mask includes layer 2, the player is in the "player" group, and the script is attached.</td></tr>'+
+'<tr><td>The player falls through the floor</td><td>The tiles have no collision painted, or the player\'s Mask does not include layer 1.</td></tr>'+
+'<tr><td>An animation does not play</td><td>The name in code and in SpriteFrames must match exactly: "run" is not "Run".</td></tr>'+
+'</tbody></table></div>';
+
+var LEVEL_TABLE='<div class="tbl"><table><thead><tr><th>Section</th><th>Job</th><th>Example</th></tr></thead><tbody>'+
+'<tr><td>1. Safe start</td><td>Teach running and jumping with nothing that can hurt you</td><td>Flat ground, one small step, a line of coins over a bump</td></tr>'+
+'<tr><td>2. Gaps</td><td>Test jumping where missing has a cost</td><td>Two small gaps, then a wider one, with coins showing the arc</td></tr>'+
+'<tr><td>3. First enemy</td><td>Introduce an enemy where it is easy to deal with</td><td>One slime on flat ground with room to jump on it</td></tr>'+
+'<tr><td>4. Twist</td><td>Combine ideas</td><td>An enemy patrolling a platform over a pit</td></tr>'+
+'<tr><td>5. Goal</td><td>A reward and a clear finish</td><td>A coin shower and the flag on a little hill</td></tr>'+
+'</tbody></table></div>';
+
+function C(key,file){return {key:key,file:file}}
+
+var WORLDS=[
+{id:"w1",name:"Get set up",blurb:"Install Godot, learn your way around, and make a tidy project ready for pixel art.",lessons:[
+{t:"Install Godot and make a project",time:"20 min",goal:"Godot 4.7 installed and your first project open.",
+steps:["Go to godotengine.org and click Download. Pick the 4.7 version for your computer. Choose the standard version, not the .NET one.","Windows: unzip the download, put the folder somewhere easy like Documents, and double-click the Godot .exe file. Mac: drag Godot into Applications. If the Mac blocks it the first time, right-click Godot and choose Open.","The Project Manager opens. Click Create.","Set Project Name to `my-first-platformer`. Click Browse next to Project Path, make a folder called GodotProjects in Documents, and pick it. Keep Create Folder ticked.","Set Renderer to Compatibility. It works on every computer and is the one you need to put your game on a website later.","Click Create (or Create & Edit)."],
+scratch:"Scratch saves your projects online. Godot saves them as files in a folder on your computer, so remember where you put it and ask a parent to help you back it up.",
+check:"The Godot editor opens with an empty scene in the middle."},
+{t:"Tour the editor",time:"15 min",goal:"Know the name and job of every part of the screen.",html:EDITOR_SVG,
+steps:["Find the Scene dock (top left). It will show the nodes in whatever scene you have open.","Find the FileSystem dock (bottom left). `res://` means the top of your project folder. You should see `icon.svg`.","Find the Inspector (right). Click `icon.svg` in the FileSystem and look at what the Inspector shows.","Find the Output tab in the bottom panel. Messages from your code and error messages appear here.","Find the run buttons (top right). Hover over each one to read its name.","In the viewport, scroll the mouse wheel to zoom and hold the middle mouse button (or Space) and drag to move around."],
+check:"You can point to the Scene dock, FileSystem, viewport, Inspector, Output and run buttons without looking at the picture."},
+{t:"Nodes and scenes",time:"20 min",goal:"Make a scene, add nodes, and run it.",
+intro:"Everything in Godot is built from nodes. Each node does one job: show a picture, play a sound, detect a collision. Nodes join together in a tree, and a group of nodes saved as a file is a scene (a `.tscn` file). Scenes can contain other scenes, so a Level scene can hold a Player scene and twenty Coin scenes.",
+html:SCRATCH_TABLE,
+steps:["In the Scene dock, click 2D Scene. A Node2D appears. Double-click its name and rename it Main.","With Main selected, click the + button at the top of the Scene dock. Search for Sprite2D and click Create.","With Sprite2D selected, drag `icon.svg` from the FileSystem onto the Texture box in the Inspector.","Press W for the move tool and drag the icon around. Watch its Position numbers change in the Inspector.","Press Ctrl+S (Cmd+S on Mac) and save the scene as `main.tscn`.","Press F5 (Cmd+B on Mac). Godot asks you to choose a main scene. Click Select Current."],
+check:"A window opens showing the Godot icon. Close the window or press F8 to stop.",
+challenge:"Add three more sprites. Give each a different Scale, Rotation and Modulate colour in the Inspector."},
+{t:"Set up your project for pixel art",time:"15 min",goal:"Folders, screen size, crisp pixels and controls ready to go.",
+steps:["In the FileSystem, right-click `res://`, choose Create New, then Folder. Make five folders: `art`, `audio`, `scenes`, `scripts` and `levels`. Drag `main.tscn` into `scenes`.","Open Project, then Project Settings. Turn on Advanced Settings with the switch at the top right.","Go to Display, then Window. Set Viewport Width to 640 and Viewport Height to 360. Set Window Width Override to 1280 and Window Height Override to 720. Check that Stretch Mode says canvas_items.","Go to Rendering, then Textures. Under Canvas Textures, set Default Texture Filter to Nearest. This keeps pixel art sharp instead of blurry.","Go to Layer Names, then 2D Physics. Name layer 1 World, layer 2 Player and layer 3 Enemies. You will use these in World 5.","Open the Input Map tab. Type `move_left` in the Add New Action box and click Add. Click the + next to it, press the A key, and click OK. Add the Left arrow to it as well.","Do the same for `move_right` (D and Right arrow), `move_up` (W and Up arrow), `move_down` (S and Down arrow) and `jump` (Space and Up arrow)."],
+why:"640 by 360 is a small canvas that scales up neatly to most screens, which suits pixel art. Input Map actions let you change keys later in one place, and gamepads can be added the same way.",
+check:"Press F5. The window is bigger and the icon is larger and crisp, with sharp edges."}
+]},
+
+{id:"w2",name:"Art and sound",blurb:"Find free art and sounds, bring them into Godot, and make a sprite animate.",lessons:[
+{t:"Find free art and sound",time:"20 min",goal:"A tile sheet, a character sheet and two sound effects downloaded.",html:SOURCES_TABLE,
+steps:["Open kenney.nl/assets and find Pixel Platformer. Click Download (you can choose to continue without donating). Ask a parent before downloading if that is your house rule.","Unzip the file and look inside. You will find tile sheets (ground, platforms, spikes, flags) and character sheets. Packed versions have no gaps between tiles, which makes them easier to use.","Open sfxr.me. Click Jump, listen, and click it again until you like the sound. Click Export .wav. Do the same with Pickup/Coin.","Make a text file called `credits.txt` and write where each thing came from, like: Pixel Platformer by Kenney (kenney.nl), CC0."],
+why:"A licence says what you are allowed to do. CC0 means anything. CC-BY means you must credit the creator. NC means you cannot sell the game. Keeping credits.txt from day one saves trouble later.",
+check:"You have a tile sheet, a character sheet and two .wav sounds saved on your computer."},
+{t:"Import images and sprite sheets",time:"20 min",goal:"Show one character from a sprite sheet.",
+steps:["Drag the tile sheet and character sheet from your computer's file window straight into the `art` folder in Godot's FileSystem.","Godot imports them automatically and makes a hidden `.import` file for each. Never delete those.","Click an image in the FileSystem, then click the Import tab next to the Scene tab. This is where import settings live. Click Reimport after changing anything.","Make a new scene with a Node2D root. Add a Sprite2D and drag the character sheet into its Texture box. You will see every character at once.","In the Inspector, open Animation. Set Hframes to the number of frames across the sheet and Vframes to the number down. To work them out, divide the image width by one frame's width, and the height by one frame's height. Click the image in the FileSystem to see its size.","Change Frame to pick which character shows."],
+scratch:"Costumes in Scratch are frames in Godot. A sprite sheet is all the costumes in one picture.",
+check:"Only one character shows, and changing Frame swaps between them."},
+{t:"Animate a sprite",time:"20 min",goal:"A character that plays idle, run and jump animations.",
+steps:["Add an AnimatedSprite2D node. In the Inspector, click Sprite Frames and choose New SpriteFrames, then click it again. The SpriteFrames panel opens at the bottom.","Double-click the animation called default and rename it `idle`.","Click the grid button (Add frames from sprite sheet). Pick your character sheet. Set Horizontal and Vertical to match the sheet, click the frames you want in order, and click Add Frames.","Click the New Animation button, name it `run`, and add the walking frames. Make a `jump` animation with one frame.","Set the speed (FPS) of run to about 8. Make sure Loop is on for idle and run.","Select idle and click the Autoplay on Load button so it starts on its own. Press the play button in the panel to preview."],
+check:"The character animates in the editor. Switching the Animation box in the Inspector shows each animation."},
+{t:"Import sound and music",time:"15 min",goal:"A sound that plays when the scene starts.",
+steps:["Drag your .wav files into the `audio` folder. Use .wav for short sound effects and .ogg for music, because .ogg files are smaller.","For music that should repeat: click the .ogg file, open the Import tab, tick Loop, and click Reimport.","Add an AudioStreamPlayer node. Drag a sound into its Stream box and tick Autoplay.","Volume Db changes the loudness: 0 is normal, -10 is quieter, and +6 is louder.","AudioStreamPlayer sounds the same everywhere. AudioStreamPlayer2D gets quieter when it is far from the camera. Use the plain one for jumps, menus and music."],
+check:"Press F6 and you hear the sound."}
+]},
+
+{id:"w3",name:"Code with GDScript",blurb:"Write your first scripts: variables, if, functions, movement and the keyboard.",lessons:[
+{t:"Your first script",time:"25 min",goal:"A script that prints messages to the Output panel.",
+intro:"GDScript is Godot's coding language. Instead of snapping blocks together, you type lines. Indentation (the Tab key) shows which lines belong together, just like blocks sitting inside an if block in Scratch.",
+steps:["Make a new scene with a Node2D root named Playground and save it as `scenes/playground.tscn`.","Right-click Playground and choose Attach Script. Set the path to `scripts/playground.gd` and click Create.","The script editor opens. Delete what is there and type in the code below. Typing it yourself helps you learn it, but Copy works too.","Press F6 and look at the Output panel at the bottom."],
+code:[C("hello","scripts/playground.gd")],htmlAfter:true,
+html:'<div class="tbl"><table><thead><tr><th>You wrote</th><th>It means</th></tr></thead><tbody><tr><td><code>var lives := 3</code></td><td>Make a variable called lives that starts at 3</td></tr><tr><td><code>func _ready()</code></td><td>Godot runs this once when the node appears, like when green flag clicked</td></tr><tr><td><code>if</code> / <code>else</code></td><td>The same as Scratch\'s if-else block</td></tr><tr><td><code>func say_twice(message)</code></td><td>Your own block, like a Scratch custom block with an input</td></tr><tr><td><code>print()</code></td><td>Write a message in the Output panel</td></tr><tr><td><code># like this</code></td><td>A comment. Godot ignores it. Use it to leave notes for yourself</td></tr></tbody></table></div>',
+check:"The Output panel says Hello, Robo! and the other lines.",
+challenge:"Change lives to 1 and run it again. Then add a countdown: `for i in range(3, 0, -1):` with `print(i)` on the next line, indented."},
+{t:"Make things move",time:"20 min",goal:"A sprite that moves and spins on its own.",
+intro:"`_process(delta)` runs every frame, about 60 times a second, like a forever loop. `delta` is the time since the last frame in seconds. Multiplying speeds by delta keeps the game the same speed on fast and slow computers.",
+steps:["Make a new scene with a Sprite2D root using `icon.svg` as the texture. Put it near the left side.","Attach a script and paste the code below.","Press F6."],
+code:[C("mover","scripts/mover.gd")],
+check:"The icon rolls across the screen and comes back on the left.",
+challenge:"Make it bounce back at the edge instead: when x is bigger than 640 or smaller than 0, do `speed = -speed`."},
+{t:"Read the keyboard",time:"20 min",goal:"Move a sprite with the keys you set up in the Input Map.",
+intro:"Godot has three useful ways to read an action. `is_action_pressed` is true while the key is held. `is_action_just_pressed` is true only on the frame it goes down. `get_axis` turns two actions into one number: -1 for left, 1 for right and 0 for neither.",
+steps:["Replace the script from the last lesson with the code below.","Press F6, then press A, D and Space."],
+code:[C("input_test","scripts/mover.gd (replace)")],
+scratch:"is_action_pressed is like the key pressed? block. is_action_just_pressed is like the when key pressed hat block.",
+check:"A and D slide the icon left and right. Space prints Jump pressed! once per press."}
+]},
+
+{id:"w4",name:"Build the hero",blurb:"Make a platformer player that runs, jumps, animates and feels great to control.",lessons:[
+{t:"Make the player scene",time:"30 min",goal:"A player that runs and jumps on solid ground.",
+intro:"CharacterBody2D is the node for characters your code controls. Its `move_and_slide()` function moves it and stops it at walls and floors. Godot uses y going downwards, so a negative y speed means up.",
+tree:"Player (CharacterBody2D)\n├─ AnimatedSprite2D\n└─ CollisionShape2D",
+steps:["Make a new scene. Click Other Node, choose CharacterBody2D, and rename it Player.","Add an AnimatedSprite2D with idle, run and jump animations, the same way as in World 2.","Add a CollisionShape2D. Set Shape to New CapsuleShape2D. Drag its orange handles so it is a little thinner than the character and its bottom sits at the feet.","Click Player. In the Inspector open Collision. Set Layer to 2 only and Mask to 1 only, by clicking the numbered squares.","Save as `scenes/player.tscn`. Attach a script saved as `scripts/player.gd` and paste the code.","Make a new scene with a Node2D root named Level1 and save it as `levels/level_1.tscn`.","Add a StaticBody2D at Position 320, 300. Give it a CollisionShape2D with a RectangleShape2D of 600 by 20, and a ColorRect sized 600 by 20 at Position -300, -10 so you can see it.","Drag `player.tscn` from the FileSystem into Level1 above the ground. Press F6."],
+code:[C("player_v1","scripts/player.gd")],
+why:"When you attach a script to a CharacterBody2D, Godot offers a Basic Movement template. We write our own so you understand every line, and can change it.",
+check:"A and D run, Space jumps, and the player lands on the ground.",
+challenge:"Try SPEED = 300 and JUMP_VELOCITY = -500. How does it feel? Put them back when you are done."},
+{t:"Animate the player",time:"20 min",goal:"The player shows idle, run and jump animations and faces the way it moves.",
+intro:"`@onready var sprite = $AnimatedSprite2D` finds the child node called AnimatedSprite2D when the scene starts. The $ sign means find a child node by its name. `flip_h` mirrors the picture.",
+steps:["Replace `player.gd` with the code below.","Check the animation names in your SpriteFrames are exactly idle, run and jump, in lower case.","Press F6 in `level_1.tscn`."],
+code:[C("player_v2","scripts/player.gd (replace)")],
+check:"The player stands still in idle, runs in run, shows jump in the air, and faces the direction it moves. If it runs backwards, change `direction < 0.0` to `direction > 0.0`."},
+{t:"Add a camera",time:"10 min",goal:"A camera that follows the player smoothly.",
+tree:"Player (CharacterBody2D)\n├─ AnimatedSprite2D\n├─ CollisionShape2D\n└─ Camera2D",
+steps:["Open `player.tscn` and add a Camera2D as a child of Player.","In the Inspector, turn on Position Smoothing and set its Speed to about 5.","Later, when your level is built, set the camera's Limit Left, Top, Right and Bottom so it never shows past the edges of the level."],
+check:"Run the level. The view follows the player, slightly behind, like a real platformer."},
+{t:"Make jumping feel great",time:"25 min",goal:"Jumping that feels like a professional platformer.",
+intro:"Good platformers quietly help the player. Coyote time lets you jump just after running off a ledge. A jump buffer remembers a jump pressed just before landing. Letting go of jump early makes a small hop. Falling faster than rising makes jumps feel snappy. And acceleration means you speed up and slow down instead of starting and stopping instantly.",
+steps:["Replace `player.gd` with the code below.","Play and compare it with before. Try tapping jump, holding jump, and jumping just after running off an edge."],
+code:[C("player_v3","scripts/player.gd (replace)")],
+check:"Holding jump goes higher than tapping it. Jumping a moment after leaving a ledge still works.",
+challenge:"Tune ACCEL, FRICTION, GRAVITY and FALL_GRAVITY. Write your favourite numbers down so you can get back to them."}
+]},
+
+{id:"w5",name:"Build the world",blurb:"Paint levels with tiles, then add coins, hazards, an enemy, sound, menus and a goal.",lessons:[
+{t:"Paint a level with tiles",time:"35 min",goal:"A level painted from your tile sheet that the player can stand on.",
+intro:"A TileMapLayer paints a level from a grid of tiles, so you can draw a whole world quickly. The TileSet says which tiles exist and which ones are solid.",
+steps:["Open `level_1.tscn` and delete the StaticBody2D ground.","Add a TileMapLayer node. In the Inspector, set Tile Set to New TileSet, then click it to open its settings.","Set Tile Size to match your tiles. Kenney's Pixel Platformer tiles are 18 by 18.","Open Physics Layers and click Add Element. This makes physics layer 0, which uses collision layer 1 (World).","Open the TileSet tab at the bottom of the screen. Drag your tile sheet into the empty list on its left. When Godot asks to create tiles automatically, click Yes.","At the top of the atlas, switch to Paint. In the Paint Properties list choose Physics, then Physics Layer 0. Click every tile that should be solid. A blue square appears on each one.","Switch to the TileMap tab at the bottom. Pick a tile and click in the viewport to paint. Right-click erases. Use the Rect tool for big blocks of ground.","For background decorations, add a second TileMapLayer named Decor above the first one in the Scene dock so it draws behind, and paint grass and signs on it."],
+check:"The player walks and jumps on your painted tiles. Turn on Debug, then Visible Collision Shapes, to see the solid areas while the game runs.",
+challenge:"Paint a staircase, a gap and a floating platform."},
+{t:"Collision layers",time:"10 min",goal:"Understand layers and masks so things notice the right things.",
+intro:"Every physics object has a Layer and a Mask. The layer is what the object is. The mask is what it looks for. The player is on layer 2 and looks for layer 1, so it stands on tiles. Coins are on no layer and look for layer 2, so they only notice the player. This table is the plan for the rest of the course.",
+html:LAYERS_TABLE,
+steps:["Click the Player in `player.tscn` and check Layer is 2 and Mask is 1.","Whenever a lesson makes a coin, spike, flag or other zone, set its Layer to none and its Mask to 2."],
+check:"You can explain why an enemy on layer 3 does not block the player."},
+{t:"Collect coins with signals",time:"30 min",goal:"Coins that disappear when collected, and a coin counter on screen.",
+intro:"A signal is how a node announces that something happened, like a Scratch broadcast. An Area2D sends `body_entered` when a body walks into it, and your code reacts. An Autoload is a script that is always running, which any other script can reach by name. Ours is called Game and keeps the score.",
+tree:"Coin (Area2D)  Layer: none  Mask: 2\n├─ AnimatedSprite2D\n└─ CollisionShape2D\n\nHUD (CanvasLayer)\n└─ CoinLabel (Label)",
+steps:["Create `scripts/game.gd` with the first code block. Open Project Settings, Globals, Autoload. Pick the file, set the name to Game and click Add.","Add the second code block to `player.gd`, just above `func _physics_process`. It puts the player in a group called player, so coins can recognise it.","Make a Coin scene: an Area2D root named Coin with an AnimatedSprite2D (a spinning coin) and a CollisionShape2D with a CircleShape2D. Set its Collision Layer to none and Mask to 2. Attach the third code block as `scripts/coin.gd` and save as `scenes/coin.tscn`.","Drag coins into the level. Select one and press Ctrl+D to duplicate it, then move the copy.","Make a HUD scene: a CanvasLayer root named HUD with a Label child named CoinLabel. Set the label's Font Size under Theme Overrides. Attach the fourth code block as `scripts/hud.gd`, save as `scenes/hud.tscn`, and drag it into the level."],
+code:[C("game","scripts/game.gd"),C("player_group","scripts/player.gd (add above _physics_process)"),C("coin_v1","scripts/coin.gd"),C("hud","scripts/hud.gd")],
+why:"You can also connect signals without code: select a node, open the Node tab next to the Inspector, and double-click a signal. Both ways do the same thing. This course uses code so you can see every connection.",
+check:"Coins vanish when touched and the counter goes up by one each time."},
+{t:"Spikes, pits and restarting",time:"20 min",goal:"Touching spikes or falling off the world restarts the level.",
+steps:["Add the first code block to the bottom of `player.gd`. When the player dies, it flashes red, waits half a second, then restarts.","Make a Spikes scene: an Area2D with a Sprite2D showing a spike tile and a CollisionShape2D slightly smaller than the spikes, so touching the very edge is forgiven. Set Layer to none and Mask to 2. Attach the second code block as `scripts/hazard.gd` and save as `scenes/spikes.tscn`.","Make a KillZone: an Area2D with a very wide CollisionShape2D rectangle and no picture. Attach the same `hazard.gd` script. Put it below the whole level so falling into a pit restarts.","Attach the third code block to the Level1 root node as `scripts/level.gd`. It resets the coins each time the level starts."],
+code:[C("player_die","scripts/player.gd (add at the bottom)"),C("hazard","scripts/hazard.gd"),C("level","scripts/level.gd")],
+check:"Touching spikes or falling into a pit flashes the player red and restarts the level with the coin count back at 0."},
+{t:"Add an enemy",time:"35 min",goal:"A slime that patrols, turns at edges, and can be stomped.",
+intro:"The enemy walks one way until it hits a wall or reaches an edge. A RayCast2D is an invisible line that checks for ground just in front of its feet. A separate HitArea decides whether the player stomped it from above or ran into its side.",
+tree:"Enemy (CharacterBody2D)  Layer: 3  Mask: 1\n├─ AnimatedSprite2D\n├─ CollisionShape2D\n├─ FloorCheck (RayCast2D)\n└─ HitArea (Area2D)  Layer: none  Mask: 2\n   └─ CollisionShape2D",
+steps:["Make the Enemy scene to match the tree. Give AnimatedSprite2D a walking animation set to autoplay.","Click FloorCheck. Set its Position to -10, 0 and its Target Position to 0, 16, so it points down just in front of the enemy as it walks left.","Make the HitArea's CollisionShape2D a little bigger than the enemy's body.","Attach the first code block as `scripts/enemy.gd` and save as `scenes/enemy.tscn`.","Add the second code block to the bottom of `player.gd`. It makes the player bounce after a stomp.","Put an enemy on a platform in your level."],
+code:[C("enemy","scripts/enemy.gd"),C("player_bounce","scripts/player.gd (add at the bottom)")],
+check:"The enemy walks and turns around at walls and edges. Landing on it from above defeats it and bounces you up. Touching its side restarts the level."},
+{t:"Sound effects and music",time:"20 min",goal:"A jump sound, a coin sound and looping music.",
+steps:["In `player.tscn`, add an AudioStreamPlayer named JumpSound with your jump .wav in its Stream.","Replace `player.gd` with the first code block. This is the whole player script so far, with the jump sound added. Use it to check yours.","In `coin.tscn`, add an AudioStreamPlayer named PickupSound with your coin sound. Replace `coin.gd` with the second code block.","In `level_1.tscn`, add an AudioStreamPlayer named Music. Use an .ogg with Loop ticked in its Import settings, tick Autoplay, and set Volume Db to about -8."],
+code:[C("player_final","scripts/player.gd (replace)"),C("coin_final","scripts/coin.gd (replace)")],
+why:"If a coin deleted itself straight away, its sound would be deleted too and you would never hear it. So the coin hides, plays the sound, waits for the finished signal, and only then deletes itself.",
+check:"Jumping makes a sound, coins make a sound, and the music loops."},
+{t:"Menus, a goal flag and the next level",time:"30 min",goal:"A title screen, a flag that ends the level, and a win screen.",
+steps:["Make a Flag scene: an Area2D with a flag Sprite2D and a CollisionShape2D. Set Layer to none and Mask to 2. Attach the first code block as `scripts/flag.gd`, save as `scenes/flag.tscn`, and put it at the end of your level.","Make a title screen: a new scene with a User Interface (Control) root named TitleScreen. Add a Label with your game's name (set a big Font Size) and a Button named Button with the text Play. Use the Anchor preset in the toolbar to centre them.","Attach the second code block as `scripts/menu.gd` and save as `scenes/title_screen.tscn`. Its Go To setting in the Inspector already points at `res://levels/level_1.tscn`.","Right-click `title_screen.tscn` in the FileSystem and choose Set As Main Scene.","Right-click `title_screen.tscn` and Duplicate it as `scenes/win_screen.tscn`. Change its label to You win! and the button text to Play again. Set Go To to `res://scenes/title_screen.tscn`.","When you make a level 2, set the flag's Next Level in the Inspector to `res://levels/level_2.tscn`."],
+code:[C("flag","scripts/flag.gd"),C("menu","scripts/menu.gd")],
+check:"Press F5. The full loop works: title screen, level, flag, win screen, and back to the title."}
+]},
+
+{id:"w6",name:"Design your first level",blurb:"Plan a level on paper, build it, playtest it, fix bugs and share it.",lessons:[
+{t:"Plan the level on paper",time:"30 min",goal:"A level plan with five sections, drawn on squared paper.",
+intro:"Great levels teach without words. Use the teach, test, twist pattern: show a new idea somewhere safe, then make the player use it, then combine it with something else. With 18-pixel tiles and a 640 by 360 screen, one screen is about 35 tiles wide and 20 tiles tall. A first level of 150 to 250 tiles wide takes about one to two minutes to play.",
+html:LEVEL_TABLE,
+steps:["Use squared paper where one square is one tile. Draw the ground line first.","Mark the five sections and write the job of each one above it.","Mark where every coin goes. Coins are breadcrumbs that show the player where to jump.","Hide one secret coin somewhere a curious player might look.","Mark where difficulty rises, and add a small easy bit after each hard bit so the player can breathe."],
+check:"Your plan has five sections, and each new idea appears somewhere safe before it gets hard."},
+{t:"Build, playtest and polish",time:"60+ min",goal:"Your designed level, built and tested by someone else.",
+steps:["Block it out first: paint only the ground and platforms from your plan, with no decorations. Play it right away.","Add coins, spikes, enemies and the flag. Play every section again.","Set the Camera2D limits. Limit Right is the level width in pixels, which is the number of tiles multiplied by 18.","Decorate: paint the Decor layer, and set the sky colour in Project Settings, Rendering, Environment, Default Clear Color.","Playtest: hand the game to someone, say nothing, and watch. Write down every place they get stuck, die unfairly or look confused.","Fix the three biggest problems, then playtest again with someone new."],
+check:"Two different people can finish the level, and at least one of them finds the secret coin."},
+{t:"Fix bugs like a pro",time:"15 min",goal:"Know what common error messages mean and how to find problems.",
+html:ERRORS_TABLE,
+steps:["Red errors appear in the Debugger panel at the bottom when the game runs. Read the first one, and click it to jump to the line.","Add `print()` lines to see what your code is doing, for example `print(velocity)`.","Turn on Debug, then Visible Collision Shapes, to see every collision shape while the game runs.","Click to the left of a line number in the script editor to add a breakpoint (a red dot). The game pauses there so you can look at your variables in the Debugger.","While the game runs, click Remote at the top of the Scene dock to see the live node tree and the real values of every node."],
+check:"Break something on purpose, like renaming CoinLabel, and use the error message to find and fix it."},
+{t:"Share your game",time:"20 min",goal:"A version of your game other people can play.",
+steps:["Open Project, then Export. The first time, Godot says export templates are missing. Click Manage Export Templates, then Download and Install.","Click Add and choose Windows Desktop, macOS or Web.","Click Export Project and choose a new folder outside your project folder.","For Web, export to a file named `index.html` in its own empty folder. To put it on itch.io, zip everything in that folder, upload it as an HTML project, and tick This file will be played in the browser. Ask a parent to set up and manage the itch.io account.","Add a credits screen using your `credits.txt`."],
+check:"Someone plays your game on their own computer or in a browser."}
+]},
+
+{id:"w7",name:"Beyond platformers",blurb:"The same skills power farming games and racing games. Here is what changes.",lessons:[
+{t:"Top-down movement for a farming game",time:"20 min",goal:"A character that walks in four directions with matching animations.",
+intro:"A farming game like Stardew Valley uses the same CharacterBody2D with no gravity. `get_vector` turns four actions into one direction, and there are walk animations for up, down and sideways.",
+steps:["Make a CharacterBody2D player and set Motion Mode to Floating in the Inspector. This turns off floors and gravity behaviour.","Make animations called idle, walk_down, walk_up and walk_side in its AnimatedSprite2D. Kenney's Tiny Town pack works well.","Attach the code below.","Turn on Y Sort Enabled on the parent node of your player and trees. Things lower on screen then draw in front, so the player can walk behind a tree."],
+code:[C("topdown","scripts/farmer.gd")],
+check:"The character walks in all directions and the right animation plays.",
+challenge:"Game Forge has a full farming guide that builds plots, crops, days and saving on top of this."},
+{t:"Car steering for a racing game",time:"20 min",goal:"A top-down car that accelerates, steers and drifts to a stop.",
+intro:"A car does not move straight left or right. It keeps a speed and a direction it is facing. Steering turns it, and the speed moves it forward in that direction.",
+steps:["Make a CharacterBody2D with a car sprite drawn facing up, and set Motion Mode to Floating.","Attach the code below. Up accelerates, down brakes, left and right steer.","Add a Camera2D so the view follows the car."],
+code:[C("car","scripts/car.gd")],
+check:"The car only turns while it is moving, and it slows down when you let go.",
+challenge:"Game Forge has a full kart racer guide with a track, laps, boost pads, rival racers and banana peels."}
+]}
+];
+
+/* ---------- render ---------- */
+var KEY="godotacademy.done.v1",OKEY="godotacademy.open.v1";
+var done={},opened={};
+try{done=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
+try{opened=JSON.parse(localStorage.getItem(OKEY)||"{}")||{}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(done));localStorage.setItem(OKEY,JSON.stringify(opened))}catch(e){}}
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmt(s){return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>")}
+
+var total=0,n=0;
+WORLDS.forEach(function(w,wi){w.lessons.forEach(function(l,li){n++;l.n=n;l.id=w.id+"-"+(li+1);total++})});
+
+function codeBlock(c){
+  var text=CODE[c.key]||"";
+  return '<div class="code"><div class="code-h"><span>GDScript · '+esc(c.file)+'</span><button class="btn ghost small" type="button" data-copy="'+c.key+'">Copy</button></div><pre><code>'+esc(text)+'</code></pre></div>';
+}
+function callout(cls,k,t){return '<div class="callout '+cls+'"><b class="k">'+k+'</b><span>'+fmt(t)+'</span></div>'}
+function lessonHtml(l){
+  var h='<details class="lesson'+(done[l.id]?' is-done':'')+'" id="'+l.id+'"'+(opened[l.id]?' open':'')+'>'+
+    '<summary><span class="num">'+l.n+'</span><span class="sum-t"><h3>'+esc(l.t)+'</h3><span>'+esc(l.time)+(done[l.id]?' · Done':'')+'</span></span><span class="chev" aria-hidden="true">›</span></summary>'+
+    '<div class="body"><p class="goal">Goal: '+fmt(l.goal)+'</p>';
+  if(l.intro)h+='<p>'+fmt(l.intro)+'</p>';
+  if(l.html&&!l.htmlAfter)h+=l.html;
+  if(l.tree)h+='<pre class="tree">'+esc(l.tree)+'</pre>';
+  if(l.steps)h+='<ol class="steps">'+l.steps.map(function(s){return '<li>'+fmt(s)+'</li>'}).join('')+'</ol>';
+  (l.code||[]).forEach(function(c){h+=codeBlock(c)});
+  if(l.html&&l.htmlAfter)h+=l.html;
+  if(l.why)h+=callout("why","Why it works",l.why);
+  if(l.scratch)h+=callout("scratch","Scratch link",l.scratch);
+  h+=callout("check","Check it works",l.check);
+  if(l.challenge)h+=callout("challenge","Challenge",l.challenge);
+  h+='<div class="finish"><label for="d-'+l.id+'"><input type="checkbox" id="d-'+l.id+'" data-done="'+l.id+'"'+(done[l.id]?' checked':'')+'> I finished this lesson</label><button class="btn small" type="button" data-next="'+l.n+'">Next lesson</button></div>';
+  return h+'</div></details>';
+}
+function render(){
+  $("worlds").innerHTML=WORLDS.map(function(w,i){
+    return '<section class="world" id="'+w.id+'" aria-labelledby="h-'+w.id+'"><div class="world-head"><span class="w">World '+(i+1)+'</span><h2 id="h-'+w.id+'">'+esc(w.name)+'</h2><p>'+esc(w.blurb)+'</p></div><div class="lessons">'+w.lessons.map(lessonHtml).join('')+'</div></section>';
+  }).join('');
+  $("tabsIn").innerHTML=WORLDS.map(function(w,i){return '<a href="#'+w.id+'">World '+(i+1)+'</a>'}).join('')+'<a href="#cheat">Cheat sheet</a>';
+  $("cheatCode").innerHTML=codeBlock(C("cheatsheet","GDScript basics"));
+  updateProgress();
+}
+function updateProgress(){
+  var d=0;
+  $("mapRow").innerHTML=WORLDS.map(function(w,i){
+    var c=w.lessons.filter(function(l){return done[l.id]}).length;d+=c;
+    return '<a class="stop'+(c===w.lessons.length?' done':'')+'" href="#'+w.id+'"><span class="w">World '+(i+1)+'</span><span class="n">'+esc(w.name)+'</span><span class="c">'+c+' of '+w.lessons.length+' lessons</span></a>';
+  }).join('');
+  $("overallLab").textContent=d+" of "+total+" lessons finished";
+  $("overallFill").style.width=Math.round(d/total*100)+"%";
+  $("overallBar").setAttribute("aria-valuemax",total);$("overallBar").setAttribute("aria-valuenow",d);
+}
+function allLessons(){var a=[];WORLDS.forEach(function(w){a=a.concat(w.lessons)});return a}
+
+document.addEventListener("toggle",function(e){
+  var t=e.target;if(!t.classList||!t.classList.contains("lesson"))return;
+  if(t.open)opened[t.id]=true;else delete opened[t.id];save();
+},true);
+document.addEventListener("change",function(e){
+  var id=e.target.getAttribute&&e.target.getAttribute("data-done");if(!id)return;
+  if(e.target.checked)done[id]=true;else delete done[id];
+  var det=$(id);det.classList.toggle("is-done",e.target.checked);
+  var span=det.querySelector(".sum-t span");var l=allLessons().filter(function(x){return x.id===id})[0];
+  span.textContent=l.time+(e.target.checked?" · Done":"");
+  save();updateProgress();
+});
+document.addEventListener("click",function(e){
+  var nb=e.target.closest&&e.target.closest("[data-next]");
+  if(nb){
+    var cur=+nb.getAttribute("data-next"),all=allLessons(),next=all[cur];
+    var me=all[cur-1];var md=$(me.id);
+    if(!done[me.id]){done[me.id]=true;md.classList.add("is-done");md.querySelector("[data-done]").checked=true;md.querySelector(".sum-t span").textContent=me.time+" · Done";updateProgress()}
+    md.open=false;delete opened[me.id];
+    if(next){var nd=$(next.id);nd.open=true;opened[next.id]=true;var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;nd.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})}
+    else{$("cheat").scrollIntoView()}
+    save();return;
+  }
+  var b=e.target.closest&&e.target.closest("[data-copy]");
+  if(!b)return;
+  var text=CODE[b.getAttribute("data-copy")]||"";
+  function ok(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},1500)}
+  function fb(){var pre=b.closest(".code").querySelector("pre"),r=document.createRange();r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Selected";setTimeout(function(){b.textContent="Copy"},1800)}
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fb)}else{fb()}}catch(err){fb()}
+});
+
+render();
+if(!Object.keys(opened).length){var f=$("w1-1");if(f)f.open=true}
+})();
+</script>
