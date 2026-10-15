@@ -1,0 +1,499 @@
+<title>Unity Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lilita+One&display=swap">
+<style>
+/* Layout: title + world map of 5 worlds, sticky world tabs, each world a stack of collapsible lesson cards, cheat sheet at the end */
+:root{
+  --bg:#e9edf5; --surface:#ffffff; --soft:#f1f4fb; --ink:#12183a; --muted:#4d5578;
+  --line:#12183a; --shadow:#12183a; --pop:#ffd23f; --godot:#1f8a7d; --scratch:#478cbf;
+  --good:#2f9e5b; --on-pop:#12183a; --focus:#2b59ff; --warn:#b4231f;
+  --display:"Lilita One","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1128; --surface:#181e40; --soft:#10163a; --ink:#eef1ff; --muted:#aab2d8;
+    --line:#4a54a0; --shadow:#04061a; --good:#5fd38d; --focus:#8fb0ff; --warn:#ff8f8a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1128; --surface:#181e40; --soft:#10163a; --ink:#eef1ff; --muted:#aab2d8;
+  --line:#4a54a0; --shadow:#04061a; --good:#5fd38d; --focus:#8fb0ff; --warn:#ff8f8a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+h1,h2,h3,h4{font-family:var(--display);font-weight:400;margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+a{color:inherit;font-weight:700}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:60rem;margin:0 auto;padding-inline:16px;padding-block:8px 64px}
+
+.top{padding-block:28px 18px;display:grid;gap:10px}
+.eyebrow{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:clamp(2.6rem,9vw,4.4rem)}
+.lede{max-width:42rem;font-size:1.1rem;color:var(--muted)}
+
+/* world map */
+.map{display:grid;gap:14px;margin-top:8px}
+.map-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,12.5rem),1fr));gap:12px}
+.stop{display:grid;gap:4px;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:3px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:4px 4px 0 var(--shadow);cursor:pointer;text-decoration:none}
+.stop:hover{background:var(--pop);color:var(--on-pop)}
+.stop .w{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.stop:hover .w{color:var(--on-pop)}
+.stop .n{font-family:var(--display);font-size:1.15rem;line-height:1.15}
+.stop .c{font-size:.85rem;font-variant-numeric:tabular-nums}
+.stop.done{border-color:var(--good)}
+.stop.done .c::before{content:"\2714  ";color:var(--good)}
+.overall{display:grid;gap:6px}
+.bar{height:16px;border:3px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pop);width:0}
+.overall .lab{font-family:var(--display);font-size:1rem;font-variant-numeric:tabular-nums}
+
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:3px solid var(--line)}
+.tabs-in{max-width:60rem;margin:0 auto;padding:10px 16px;display:flex;gap:8px;overflow-x:auto}
+.tabs a{white-space:nowrap;text-decoration:none;font-family:var(--display);font-weight:400;font-size:1rem;padding:5px 13px;border:3px solid var(--line);border-radius:10px;background:var(--surface)}
+.tabs a:hover{background:var(--pop);color:var(--on-pop)}
+
+.world{padding-block:40px 4px;scroll-margin-top:70px}
+.world-head{display:grid;gap:6px;margin-bottom:18px;max-width:44rem}
+.world-head .w{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--godot);font-weight:700}
+.world-head h2{font-size:clamp(1.8rem,5vw,2.5rem)}
+.world-head p{color:var(--muted)}
+.lessons{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.lessons>*,.world,.sheet>*{min-width:0}
+
+/* lesson */
+details.lesson{background:var(--surface);border:3px solid var(--line);border-radius:14px;box-shadow:5px 5px 0 var(--shadow);scroll-margin-top:72px}
+details.lesson[open]{box-shadow:6px 6px 0 var(--shadow)}
+details.lesson > summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px}
+details.lesson > summary::-webkit-details-marker{display:none}
+.num{font-family:var(--display);font-size:1.1rem;width:2.4rem;height:2.4rem;display:grid;place-items:center;border:3px solid var(--line);border-radius:10px;background:var(--soft);font-variant-numeric:tabular-nums}
+.lesson.is-done .num{background:var(--good);color:var(--surface);border-color:var(--good)}
+.sum-t{display:grid;gap:2px;min-width:0}
+.sum-t h3{font-size:1.3rem}
+.sum-t span{font-size:.88rem;color:var(--muted)}
+.chev{font-family:var(--display);font-size:1.4rem;transition:transform .15s}
+details[open] .chev{transform:rotate(90deg)}
+@media (prefers-reduced-motion: reduce){.chev{transition:none}}
+.body{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:4px 18px 18px;border-top:3px dashed var(--line);padding-top:16px;min-width:0}
+.goal{font-weight:700;font-size:1.05rem}
+.body p{max-width:44rem}
+.steps{margin:0;padding-left:1.4rem;display:grid;gap:8px;max-width:46rem}
+.steps li::marker{font-family:var(--display);color:var(--godot)}
+.callout{display:grid;gap:4px;border:2px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--soft)}
+.callout b.k{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+.callout.scratch b.k{color:var(--scratch)}
+.callout.why b.k{color:var(--godot)}
+.callout.check{border-style:dashed}
+.callout.check b.k{color:var(--good)}
+.callout.challenge{background:var(--surface);border-width:3px}
+.callout.challenge b.k{color:var(--ink)}
+.tree{margin:0;font-family:var(--mono);font-size:.9rem;background:var(--soft);border:2px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.code{border:3px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.code-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 10px;background:var(--soft);border-bottom:3px solid var(--line);font-size:.85rem;font-weight:700}
+.code pre{margin:0;background:var(--surface);overflow-x:auto;padding:12px;font-family:var(--mono);font-size:.85rem;line-height:1.5;tab-size:4}
+code{font-family:var(--mono);font-size:.88em;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.code pre code{background:none;border:0;padding:0;font-size:inherit}
+.btn{font-family:var(--display);font-size:1rem;background:var(--pop);color:var(--on-pop);border:3px solid var(--line);border-radius:10px;padding:5px 13px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.small{font-size:.85rem;padding:2px 10px;box-shadow:2px 2px 0 var(--shadow)}
+.btn.ghost{background:var(--surface);color:var(--ink)}
+.finish{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:3px dashed var(--line);padding-top:14px}
+.finish label{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+.finish input{width:24px;height:24px;accent-color:var(--good)}
+
+/* tables */
+.tbl{overflow-x:auto;border:2px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+
+/* editor diagram */
+.diagram{overflow-x:auto;border:2px solid var(--line);border-radius:10px;background:var(--soft);padding:10px}
+.diagram svg{display:block;width:100%;min-width:520px;height:auto}
+.dg-panel{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.dg-view{fill:var(--bg);stroke:var(--line);stroke-width:2}
+.dg-bar{fill:var(--godot);stroke:var(--line);stroke-width:2}
+.dg-t{fill:var(--ink);font-family:var(--body);font-size:13px;font-weight:700}
+.dg-s{fill:var(--muted);font-family:var(--body);font-size:11px}
+.dg-bt{fill:var(--surface);font-family:var(--body);font-size:12px;font-weight:700}
+
+.sheet{display:grid;gap:22px}
+.resources{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr));gap:14px}
+.res{background:var(--surface);border:3px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;align-content:start}
+.res h4{font-size:1.1rem}
+.res p{font-size:.92rem;color:var(--muted)}
+.card{background:var(--surface);border:3px solid var(--line);border-radius:14px;box-shadow:5px 5px 0 var(--shadow);padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+.card h3{font-size:1.4rem}
+.foot{margin-top:40px;color:var(--muted);font-size:.9rem;max-width:44rem}
+.msg{font-size:.88rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">A Unity 6 course for Godot graduates</p>
+    <h1>Unity Academy</h1>
+    <p class="lede"><a href="godot-academy.html">New to coding games? Start with Godot Academy.</a> <a href="index.html">Planning a game? Go to Game Forge.</a></p>
+    <p class="lede">Five worlds that take you from installing Unity to rebuilding your platformer in C#, sharing it online, and trying your first 3D game. You will meet the same ideas as in Godot Academy, with Unity's names for them.</p>
+  </header>
+  <section class="map" aria-label="Course map">
+    <div class="overall"><span class="lab" id="overallLab"></span><div class="bar" role="progressbar" aria-label="Lessons finished" aria-valuemin="0" id="overallBar"><i id="overallFill"></i></div></div>
+    <div class="map-row" id="mapRow"></div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Worlds"><div class="tabs-in" id="tabsIn"></div></nav>
+
+<main class="wrap">
+  <div id="worlds"></div>
+
+  <section class="world" id="cheat" aria-labelledby="h-cheat">
+    <div class="world-head"><span class="w">Keep this open</span><h2 id="h-cheat">Cheat sheet</h2><p>Shortcuts, C# at a glance, the main components, and where to learn more.</p></div>
+    <div class="sheet">
+      <div class="card"><h3>Keyboard shortcuts</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Do this</th><th>Windows</th><th>Mac</th></tr></thead>
+          <tbody>
+            <tr><td>Play or stop</td><td><code>Ctrl+P</code></td><td><code>Cmd+P</code></td></tr>
+            <tr><td>Pause</td><td><code>Ctrl+Shift+P</code></td><td><code>Cmd+Shift+P</code></td></tr>
+            <tr><td>Save the scene</td><td><code>Ctrl+S</code></td><td><code>Cmd+S</code></td></tr>
+            <tr><td>Duplicate the selected object</td><td><code>Ctrl+D</code></td><td><code>Cmd+D</code></td></tr>
+            <tr><td>Zoom to the selected object</td><td><code>F</code></td><td><code>F</code></td></tr>
+            <tr><td>Hand, move, rotate, scale, rect tools</td><td><code>Q</code> <code>W</code> <code>E</code> <code>R</code> <code>T</code></td><td><code>Q</code> <code>W</code> <code>E</code> <code>R</code> <code>T</code></td></tr>
+            <tr><td>Rename the selected object</td><td><code>F2</code></td><td><code>Enter</code></td></tr>
+            <tr><td>Undo</td><td><code>Ctrl+Z</code></td><td><code>Cmd+Z</code></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card"><h3>C# at a glance</h3><div id="cheatCode"></div></div>
+      <div class="card"><h3>Components you will use most</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Component</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td>Sprite Renderer</td><td>Shows a 2D picture</td></tr>
+            <tr><td>Rigidbody 2D</td><td>Gives physics. Dynamic falls and moves, Kinematic is moved only by code, Static never moves</td></tr>
+            <tr><td>Box, Circle or Capsule Collider 2D</td><td>A solid shape for bumping into things. Tick Is Trigger to make it a detection zone instead</td></tr>
+            <tr><td>Tilemap Collider 2D</td><td>Makes painted tiles solid</td></tr>
+            <tr><td>Animator</td><td>Plays animation clips using an Animator Controller</td></tr>
+            <tr><td>Audio Source</td><td>Plays sounds and music</td></tr>
+            <tr><td>Cinemachine Camera</td><td>A smart camera that follows a target</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div><h3 style="font-size:1.4rem;margin-bottom:12px">Keep learning</h3>
+        <div class="resources">
+          <div class="res"><h4>Unity Learn</h4><p>Free official courses, including Unity Essentials, Create with Code and the Roll-a-ball tutorial.</p><a href="https://learn.unity.com" target="_blank" rel="noopener">learn.unity.com</a></div>
+          <div class="res"><h4>Unity Manual</h4><p>The official guide to every window and feature in the editor.</p><a href="https://docs.unity3d.com/Manual/index.html" target="_blank" rel="noopener">docs.unity3d.com</a></div>
+          <div class="res"><h4>Scripting reference</h4><p>Every class and function in Unity's C# API, with examples.</p><a href="https://docs.unity3d.com/ScriptReference/index.html" target="_blank" rel="noopener">Scripting API</a></div>
+          <div class="res"><h4>Kenney assets</h4><p>Free CC0 art and sound packs that work in Unity too.</p><a href="https://kenney.nl/assets" target="_blank" rel="noopener">kenney.nl/assets</a></div>
+        </div>
+      </div>
+    </div>
+    <p class="foot">Written for Unity 6. All the C# on this page has been compile-checked, but not run inside Unity itself. Menu names can move slightly between Unity 6 versions, so if a menu item is not where a step says, use the search box at the top of the Hierarchy, Project window or Add Component menu. Progress ticks are saved in this browser only.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var CODE={"MenuButtons": "using UnityEngine;\nusing UnityEngine.SceneManagement;\n\npublic class MenuButtons : MonoBehaviour\n{\n    public void LoadScene(string sceneName)\n    {\n        SceneManager.LoadScene(sceneName);\n    }\n\n    public void QuitGame()\n    {\n        Application.Quit();\n    }\n}", "Roller": "using UnityEngine;\nusing UnityEngine.InputSystem;\n\npublic class Roller : MonoBehaviour\n{\n    public float force = 10f;\n\n    Rigidbody rb;\n    InputAction moveAction;\n\n    void Start()\n    {\n        rb = GetComponent<Rigidbody>();\n        moveAction = InputSystem.actions.FindAction(\"Move\");\n    }\n\n    void FixedUpdate()\n    {\n        Vector2 move = moveAction.ReadValue<Vector2>();\n        rb.AddForce(new Vector3(move.x, 0f, move.y) * force);\n    }\n}", "HelloUnity": "using UnityEngine;\n\npublic class HelloUnity : MonoBehaviour\n{\n    string playerName = \"Robo\";\n    int lives = 3;\n\n    void Start()\n    {\n        Debug.Log(\"Hello, \" + playerName + \"!\");\n        Debug.Log(\"You have \" + lives + \" lives.\");\n        if (lives > 2)\n        {\n            Debug.Log(\"Plenty of lives left.\");\n        }\n        else\n        {\n            Debug.Log(\"Be careful!\");\n        }\n        SayTwice(\"Unity is fun\");\n    }\n\n    void SayTwice(string message)\n    {\n        Debug.Log(message);\n        Debug.Log(message);\n    }\n}", "InputTest": "using UnityEngine;\nusing UnityEngine.InputSystem;\n\npublic class InputTest : MonoBehaviour\n{\n    public float speed = 5f;\n\n    InputAction moveAction;\n    InputAction jumpAction;\n\n    void Start()\n    {\n        moveAction = InputSystem.actions.FindAction(\"Move\");\n        jumpAction = InputSystem.actions.FindAction(\"Jump\");\n    }\n\n    void Update()\n    {\n        Vector2 move = moveAction.ReadValue<Vector2>();\n        transform.position += new Vector3(move.x, 0f, 0f) * speed * Time.deltaTime;\n        if (jumpAction.WasPressedThisFrame())\n        {\n            Debug.Log(\"Jump pressed!\");\n        }\n    }\n}", "Enemy": "using UnityEngine;\n\npublic class Enemy : MonoBehaviour\n{\n    public float speed = 2f;\n    public Transform edgeCheck;\n    public LayerMask groundLayer;\n\n    Rigidbody2D rb;\n    SpriteRenderer sprite;\n    float direction = -1f;\n\n    void Start()\n    {\n        rb = GetComponent<Rigidbody2D>();\n        sprite = GetComponent<SpriteRenderer>();\n    }\n\n    void FixedUpdate()\n    {\n        rb.linearVelocityX = direction * speed;\n        bool groundAhead = Physics2D.Raycast(edgeCheck.position, Vector2.down, 0.5f, groundLayer);\n        bool wallAhead = Physics2D.Raycast(edgeCheck.position, Vector2.right * direction, 0.1f, groundLayer);\n        if (!groundAhead || wallAhead)\n        {\n            Turn();\n        }\n    }\n\n    void Turn()\n    {\n        direction = -direction;\n        sprite.flipX = direction > 0f;\n        Vector3 p = edgeCheck.localPosition;\n        edgeCheck.localPosition = new Vector3(-p.x, p.y, p.z);\n    }\n\n    void OnCollisionEnter2D(Collision2D collision)\n    {\n        PlayerController player = collision.gameObject.GetComponent<PlayerController>();\n        if (player == null)\n        {\n            return;\n        }\n        if (collision.transform.position.y > transform.position.y + 0.3f)\n        {\n            player.Bounce();\n            Destroy(gameObject);\n        }\n        else\n        {\n            player.Die();\n        }\n    }\n}", "GameManager": "public static class GameManager\n{\n    public static int Coins { get; private set; }\n    public static event System.Action<int> CoinsChanged;\n\n    public static void AddCoin()\n    {\n        Coins++;\n        CoinsChanged?.Invoke(Coins);\n    }\n\n    public static void ResetCoins()\n    {\n        Coins = 0;\n        CoinsChanged?.Invoke(Coins);\n    }\n}", "PlayerController_v2": "using UnityEngine;\nusing UnityEngine.InputSystem;\n\npublic class PlayerController : MonoBehaviour\n{\n    public float speed = 8f;\n    public float jumpSpeed = 14f;\n    public Transform groundCheck;\n    public LayerMask groundLayer;\n\n    Rigidbody2D rb;\n    Animator animator;\n    SpriteRenderer sprite;\n    InputAction moveAction;\n    InputAction jumpAction;\n\n    void Start()\n    {\n        rb = GetComponent<Rigidbody2D>();\n        animator = GetComponent<Animator>();\n        sprite = GetComponent<SpriteRenderer>();\n        moveAction = InputSystem.actions.FindAction(\"Move\");\n        jumpAction = InputSystem.actions.FindAction(\"Jump\");\n    }\n\n    void Update()\n    {\n        float x = moveAction.ReadValue<Vector2>().x;\n        rb.linearVelocityX = x * speed;\n\n        bool grounded = IsGrounded();\n        if (jumpAction.WasPressedThisFrame() && grounded)\n        {\n            rb.linearVelocityY = jumpSpeed;\n        }\n\n        if (x != 0f)\n        {\n            sprite.flipX = x < 0f;\n        }\n        animator.SetFloat(\"Speed\", Mathf.Abs(x));\n        animator.SetBool(\"Grounded\", grounded);\n    }\n\n    bool IsGrounded()\n    {\n        return Physics2D.OverlapCircle(groundCheck.position, 0.15f, groundLayer);\n    }\n}", "PlayerController_v1": "using UnityEngine;\nusing UnityEngine.InputSystem;\n\npublic class PlayerController : MonoBehaviour\n{\n    public float speed = 8f;\n    public float jumpSpeed = 14f;\n    public Transform groundCheck;\n    public LayerMask groundLayer;\n\n    Rigidbody2D rb;\n    InputAction moveAction;\n    InputAction jumpAction;\n\n    void Start()\n    {\n        rb = GetComponent<Rigidbody2D>();\n        moveAction = InputSystem.actions.FindAction(\"Move\");\n        jumpAction = InputSystem.actions.FindAction(\"Jump\");\n    }\n\n    void Update()\n    {\n        float x = moveAction.ReadValue<Vector2>().x;\n        rb.linearVelocityX = x * speed;\n\n        if (jumpAction.WasPressedThisFrame() && IsGrounded())\n        {\n            rb.linearVelocityY = jumpSpeed;\n        }\n    }\n\n    bool IsGrounded()\n    {\n        return Physics2D.OverlapCircle(groundCheck.position, 0.15f, groundLayer);\n    }\n}", "Hazard": "using UnityEngine;\n\npublic class Hazard : MonoBehaviour\n{\n    void OnTriggerEnter2D(Collider2D other)\n    {\n        PlayerController player = other.GetComponent<PlayerController>();\n        if (player != null)\n        {\n            player.Die();\n        }\n    }\n}", "Hud": "using TMPro;\nusing UnityEngine;\n\npublic class Hud : MonoBehaviour\n{\n    public TMP_Text coinText;\n\n    void OnEnable()\n    {\n        GameManager.CoinsChanged += ShowCoins;\n    }\n\n    void OnDisable()\n    {\n        GameManager.CoinsChanged -= ShowCoins;\n    }\n\n    void Start()\n    {\n        GameManager.ResetCoins();\n    }\n\n    void ShowCoins(int total)\n    {\n        coinText.text = \"Coins: \" + total;\n    }\n}", "PlayerController_final": "using UnityEngine;\nusing UnityEngine.InputSystem;\nusing UnityEngine.SceneManagement;\n\n[RequireComponent(typeof(AudioSource))]\npublic class PlayerController : MonoBehaviour\n{\n    public float speed = 8f;\n    public float acceleration = 60f;\n    public float jumpSpeed = 14f;\n    public float fallGravityScale = 5f;\n    public float coyoteTime = 0.1f;\n    public float jumpBuffer = 0.12f;\n    public Transform groundCheck;\n    public LayerMask groundLayer;\n    public AudioClip jumpSound;\n\n    Rigidbody2D rb;\n    Animator animator;\n    SpriteRenderer sprite;\n    AudioSource audioSource;\n    InputAction moveAction;\n    InputAction jumpAction;\n    float normalGravityScale;\n    float coyoteLeft;\n    float bufferLeft;\n    bool dead;\n\n    void Start()\n    {\n        rb = GetComponent<Rigidbody2D>();\n        animator = GetComponent<Animator>();\n        sprite = GetComponent<SpriteRenderer>();\n        audioSource = GetComponent<AudioSource>();\n        moveAction = InputSystem.actions.FindAction(\"Move\");\n        jumpAction = InputSystem.actions.FindAction(\"Jump\");\n        normalGravityScale = rb.gravityScale;\n    }\n\n    void Update()\n    {\n        if (dead)\n        {\n            return;\n        }\n\n        bool grounded = IsGrounded() && rb.linearVelocityY <= 0.1f;\n        if (grounded)\n        {\n            coyoteLeft = coyoteTime;\n        }\n        else\n        {\n            coyoteLeft -= Time.deltaTime;\n        }\n\n        bufferLeft -= Time.deltaTime;\n        if (jumpAction.WasPressedThisFrame())\n        {\n            bufferLeft = jumpBuffer;\n        }\n\n        if (bufferLeft > 0f && coyoteLeft > 0f)\n        {\n            rb.linearVelocityY = jumpSpeed;\n            bufferLeft = 0f;\n            coyoteLeft = 0f;\n            if (jumpSound != null)\n            {\n                audioSource.PlayOneShot(jumpSound);\n            }\n        }\n\n        if (jumpAction.WasReleasedThisFrame() && rb.linearVelocityY > 0f)\n        {\n            rb.linearVelocityY *= 0.5f;\n        }\n\n        rb.gravityScale = rb.linearVelocityY < 0f ? fallGravityScale : normalGravityScale;\n\n        float x = moveAction.ReadValue<Vector2>().x;\n        rb.linearVelocityX = Mathf.MoveTowards(rb.linearVelocityX, x * speed, acceleration * Time.deltaTime);\n\n        if (x != 0f)\n        {\n            sprite.flipX = x < 0f;\n        }\n        animator.SetFloat(\"Speed\", Mathf.Abs(x));\n        animator.SetBool(\"Grounded\", grounded);\n    }\n\n    bool IsGrounded()\n    {\n        return Physics2D.OverlapCircle(groundCheck.position, 0.15f, groundLayer);\n    }\n\n    public void Bounce()\n    {\n        rb.linearVelocityY = jumpSpeed * 0.7f;\n    }\n\n    public void Die()\n    {\n        if (dead)\n        {\n            return;\n        }\n        dead = true;\n        sprite.color = Color.red;\n        rb.linearVelocity = Vector2.zero;\n        rb.simulated = false;\n        Invoke(nameof(Restart), 0.5f);\n    }\n\n    void Restart()\n    {\n        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);\n    }\n}", "Coin": "using UnityEngine;\n\npublic class Coin : MonoBehaviour\n{\n    public AudioClip pickupSound;\n\n    void OnTriggerEnter2D(Collider2D other)\n    {\n        if (other.CompareTag(\"Player\"))\n        {\n            GameManager.AddCoin();\n            if (pickupSound != null)\n            {\n                AudioSource.PlayClipAtPoint(pickupSound, Camera.main.transform.position);\n            }\n            Destroy(gameObject);\n        }\n    }\n}", "Cheatsheet": "using UnityEngine;\n\npublic class Cheatsheet : MonoBehaviour\n{\n    // Variables: the type comes first, then the name\n    int score = 0;                       // whole number\n    float speed = 5.5f;                  // decimal number (needs an f)\n    string heroName = \"Pip\";             // text\n    bool alive = true;                   // true or false\n    string[] items = { \"key\", \"map\" };   // a list\n    const int MaxHp = 5;                 // never changes\n\n    // public (or [SerializeField]) shows it in the Inspector\n    public float jumpPower = 12f;\n    [SerializeField] AudioClip hitSound;\n\n    void Start()\n    {\n        // Runs once at the start, like _ready() in Godot\n        if (score >= 10 && alive)\n        {\n            Debug.Log(\"Great!\");\n        }\n        else if (score > 0)\n        {\n            Debug.Log(\"Keep going\");\n        }\n        else\n        {\n            Debug.Log(\"Start collecting\");\n        }\n\n        foreach (string item in items)\n        {\n            Debug.Log(item);\n        }\n\n        int total = Add(2, 3);\n        Debug.Log(total);\n    }\n\n    void Update()\n    {\n        // Runs every frame, like _process() in Godot\n        transform.position += Vector3.right * speed * Time.deltaTime;\n    }\n\n    int Add(int a, int b)\n    {\n        return a + b;\n    }\n}", "Mover": "using UnityEngine;\n\npublic class Mover : MonoBehaviour\n{\n    public float speed = 3f;\n\n    void Update()\n    {\n        transform.position += Vector3.right * speed * Time.deltaTime;\n        transform.Rotate(0f, 0f, 120f * Time.deltaTime);\n        if (transform.position.x > 8f)\n        {\n            transform.position = new Vector3(-8f, transform.position.y, 0f);\n        }\n    }\n}", "Goal": "using UnityEngine;\nusing UnityEngine.SceneManagement;\n\npublic class Goal : MonoBehaviour\n{\n    public string nextScene = \"WinScreen\";\n\n    void OnTriggerEnter2D(Collider2D other)\n    {\n        if (other.CompareTag(\"Player\"))\n        {\n            SceneManager.LoadScene(nextScene);\n        }\n    }\n}"};
+
+var EDITOR_SVG='<div class="diagram" role="img" aria-label="Diagram of the Unity editor: toolbar with Play buttons at the top, Hierarchy on the left, Scene and Game views in the middle, Inspector on the right, Project window and Console along the bottom."><svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg">'+
+'<rect class="dg-bar" x="10" y="10" width="700" height="34" rx="6"/>'+
+'<text class="dg-bt" x="22" y="32">File  Edit  Assets  GameObject  Component  Window</text>'+
+'<text class="dg-bt" x="440" y="32">Play ▶   Pause ❚❚   Step ▶❚</text>'+
+'<rect class="dg-panel" x="10" y="52" width="160" height="230" rx="6"/><text class="dg-t" x="20" y="74">Hierarchy</text><text class="dg-s" x="20" y="92">Every GameObject in the</text><text class="dg-s" x="20" y="106">scene, shown as a tree</text>'+
+'<rect class="dg-view" x="178" y="52" width="358" height="230" rx="6"/><text class="dg-t" x="190" y="74">Scene view  |  Game view</text><text class="dg-s" x="190" y="92">Scene: where you build. Right-drag or</text><text class="dg-s" x="190" y="106">middle-drag to pan, scroll to zoom.</text><text class="dg-s" x="190" y="124">Game: what the player sees when you press Play</text>'+
+'<rect class="dg-panel" x="10" y="290" width="526" height="100" rx="6"/><text class="dg-t" x="20" y="312">Project window  |  Console</text><text class="dg-s" x="20" y="330">Project: every file in your Assets folder (art, sounds, scripts, scenes).</text><text class="dg-s" x="20" y="346">Console: Debug.Log messages, warnings and red errors.</text>'+
+'<rect class="dg-panel" x="544" y="52" width="166" height="338" rx="6"/><text class="dg-t" x="554" y="74">Inspector</text><text class="dg-s" x="554" y="92">The components on the</text><text class="dg-s" x="554" y="106">selected GameObject and</text><text class="dg-s" x="554" y="120">all their settings.</text><text class="dg-t" x="554" y="154">Add Component</text><text class="dg-s" x="554" y="172">The button at the bottom</text>'+
+'</svg></div>';
+
+var GODOT_TABLE='<div class="tbl"><table><thead><tr><th>In Godot</th><th>In Unity</th></tr></thead><tbody>'+
+'<tr><td>Node</td><td>GameObject, plus the components on it</td></tr>'+
+'<tr><td>Scene saved for reuse (coin.tscn)</td><td>Prefab</td></tr>'+
+'<tr><td>Level scene</td><td>Scene</td></tr>'+
+'<tr><td>Scene dock</td><td>Hierarchy</td></tr>'+
+'<tr><td>FileSystem dock</td><td>Project window</td></tr>'+
+'<tr><td>Output panel</td><td>Console</td></tr>'+
+'<tr><td>GDScript</td><td>C#</td></tr>'+
+'<tr><td><code>_ready()</code> and <code>_process(delta)</code></td><td><code>Start()</code> and <code>Update()</code> with <code>Time.deltaTime</code></td></tr>'+
+'<tr><td>CollisionShape2D</td><td>Box, Circle or Capsule Collider 2D</td></tr>'+
+'<tr><td>Area2D and body_entered</td><td>A collider with Is Trigger ticked, and <code>OnTriggerEnter2D</code></td></tr>'+
+'<tr><td>Groups</td><td>Tags</td></tr>'+
+'<tr><td>Signals</td><td>C# events, and UnityEvents such as a button\'s On Click</td></tr>'+
+'<tr><td>Input Map</td><td>Input System actions</td></tr>'+
+'<tr><td>Pixels, with y going down</td><td>Units, with y going up</td></tr>'+
+'</tbody></table></div>';
+
+var REQ_TABLE='<div class="tbl"><table><thead><tr><th>You need</th><th>Details</th></tr></thead><tbody>'+
+'<tr><td>A Windows PC or a Mac</td><td>Windows 10 or 11, or macOS 13 Ventura or newer. Unity does not run on a Chromebook.</td></tr>'+
+'<tr><td>Memory</td><td>At least 8 GB of RAM. More makes everything faster.</td></tr>'+
+'<tr><td>Space</td><td>About 15 GB free for Unity, its extras and your first projects.</td></tr>'+
+'<tr><td>A Unity account</td><td>Unity\'s terms have a minimum age, so a parent creates the account and signs in for you.</td></tr>'+
+'<tr><td>A licence</td><td>Unity Personal is free for hobby projects.</td></tr>'+
+'</tbody></table></div>';
+
+var CSHARP_TABLE='<div class="tbl"><table><thead><tr><th>GDScript</th><th>C#</th></tr></thead><tbody>'+
+'<tr><td><code>var lives := 3</code></td><td><code>int lives = 3;</code> (the type comes first)</td></tr>'+
+'<tr><td><code>func say(message):</code> then indented lines</td><td><code>void Say(string message) { ... }</code></td></tr>'+
+'<tr><td>Indentation groups lines</td><td>Curly braces <code>{ }</code> group lines</td></tr>'+
+'<tr><td>A new line ends a statement</td><td>A semicolon <code>;</code> ends a statement</td></tr>'+
+'<tr><td><code>and</code>, <code>or</code>, <code>not</code></td><td><code>&amp;&amp;</code>, <code>||</code>, <code>!</code></td></tr>'+
+'<tr><td><code>print()</code></td><td><code>Debug.Log()</code></td></tr>'+
+'<tr><td><code># comment</code></td><td><code>// comment</code></td></tr>'+
+'</tbody></table></div>';
+
+var SOURCES_TABLE='<div class="tbl"><table><thead><tr><th>Site</th><th>What it has</th><th>Licence</th></tr></thead><tbody>'+
+'<tr><td><a href="https://kenney.nl/assets" target="_blank" rel="noopener">kenney.nl</a></td><td>Pixel Platformer and many other packs, plus sound packs</td><td>CC0: use for anything</td></tr>'+
+'<tr><td><a href="https://sfxr.me" target="_blank" rel="noopener">sfxr.me</a></td><td>Make your own retro sound effects</td><td>Yours to use</td></tr>'+
+'<tr><td>Unity Asset Store</td><td>Free and paid packs that install straight into Unity. Ask a parent before getting anything, even free items, because it uses the Unity account</td><td>Asset Store licence</td></tr>'+
+'</tbody></table></div>';
+
+var ERRORS_TABLE='<div class="tbl"><table><thead><tr><th>What you see in the Console</th><th>What it usually means</th></tr></thead><tbody>'+
+'<tr><td>NullReferenceException: Object reference not set to an instance of an object</td><td>A slot in the Inspector is empty, such as Ground Check or Coin Text, or GetComponent could not find a component. Double-click the error to see the line.</td></tr>'+
+'<tr><td>error CS1002: ; expected</td><td>A missing semicolon on that line, or the line before it.</td></tr>'+
+'<tr><td>error CS0103: The name ... does not exist in the current context</td><td>A typo, or the capitals do not match. <code>speed</code> and <code>Speed</code> are different names.</td></tr>'+
+'<tr><td>Can\'t add script component because the script class cannot be found</td><td>The file name and the class name must match exactly, and every red compile error must be fixed first.</td></tr>'+
+'<tr><td>InvalidOperationException: You are trying to read Input using the UnityEngine.Input class</td><td>Code copied from an older tutorial. Use the Input System actions from lesson 8 instead.</td></tr>'+
+'<tr><td>The player falls through the tiles</td><td>The Tilemap has no Tilemap Collider 2D, or the player has no collider.</td></tr>'+
+'<tr><td>Jump never works</td><td>Ground Layer is not set on the player, GroundCheck is not at the feet, or the tiles are not on the Ground layer.</td></tr>'+
+'<tr><td>My changes disappeared</td><td>You changed things while in Play mode. Unity throws those changes away when you stop.</td></tr>'+
+'</tbody></table></div>';
+
+var LEVEL_TABLE='<div class="tbl"><table><thead><tr><th>Section</th><th>Job</th><th>Example</th></tr></thead><tbody>'+
+'<tr><td>1. Safe start</td><td>Teach running and jumping with nothing that can hurt you</td><td>Flat ground, one step, coins over a bump</td></tr>'+
+'<tr><td>2. Gaps</td><td>Test jumping where missing has a cost</td><td>Two small gaps, then a wider one</td></tr>'+
+'<tr><td>3. First enemy</td><td>Introduce an enemy where it is easy to deal with</td><td>One slime on flat ground</td></tr>'+
+'<tr><td>4. Twist</td><td>Combine ideas</td><td>An enemy patrolling a platform over a pit</td></tr>'+
+'<tr><td>5. Goal</td><td>A reward and a clear finish</td><td>A coin shower and the flag</td></tr>'+
+'</tbody></table></div>';
+
+function C(key,file){return {key:key,file:file}}
+
+var WORLDS=[
+{id:"w1",name:"Get set up",blurb:"Check your computer, install Unity, and learn how GameObjects and components fit together.",lessons:[
+{t:"Check your computer and get an account",time:"10 min",goal:"Know your computer can run Unity, and have a Unity account ready.",
+intro:"Unity is a professional game engine. Hollow Knight, Cuphead and Among Us were made with it. It is bigger and heavier than Godot, so check these first.",
+html:REQ_TABLE,
+steps:["Check your computer's operating system, memory and free space with a parent.","Ask a parent to create a Unity account at unity.com using their own email.","If you only have a Chromebook, stay with Godot for now. Everything you learn there carries over."],
+check:"Your computer meets the list, and a parent has a Unity account ready."},
+{t:"Install Unity Hub and the editor",time:"40 min",goal:"Unity Hub and the Unity 6 editor installed.",
+intro:"Unity Hub is a launcher app. It installs Unity versions and opens your projects.",
+steps:["Go to unity.com/download and download Unity Hub for your computer. Install and open it.","Sign in with the Unity account. When Hub asks, choose the free Unity Personal licence.","Open the Installs tab and click Install Editor. Choose the newest Unity 6 version marked LTS (Recommended). LTS means long-term support, so it is the most stable.","On the modules screen, tick Web Build Support. On Windows, also tick Microsoft Visual Studio Community, which is where you will write code.","Click Install. This is a big download and can take an hour, so start it before dinner."],
+check:"The Installs tab shows your Unity 6 version with no errors."},
+{t:"Make a 2D project and tour the editor",time:"20 min",goal:"A new 2D project open, and know every part of the screen.",
+html:EDITOR_SVG,
+steps:["In Unity Hub, open Projects and click New project.","Choose the Universal 2D template. If it shows a download button, download it first.","Set the Project name to `my-first-unity-platformer` and pick a folder. Leave the Unity Cloud and version control options switched off for now. Click Create project.","Find the Hierarchy, Scene view, Game view, Inspector, Project window and Console.","Press the Play button at the top, look at the Game view, then press Play again to stop."],
+why:"Anything you change while Play mode is on is thrown away when you stop. Unity tints the editor while playing as a reminder. This catches out everyone at least once.",
+godot:"The Hierarchy is like Godot's Scene dock, the Project window is like the FileSystem, and the Console is like the Output panel.",
+check:"You can point to each panel, and you know what happens to changes made in Play mode."},
+{t:"GameObjects and components",time:"20 min",goal:"Make a square fall onto a floor using only components.",
+intro:"Everything in a Unity scene is a GameObject. A GameObject does nothing by itself. You add components to give it abilities: a Sprite Renderer to show a picture, a Rigidbody 2D to fall, a Collider 2D to bump into things. In Godot you nest one node per job. In Unity, one GameObject collects several components.",
+html:GODOT_TABLE,
+steps:["Right-click in the Hierarchy and choose 2D Object, then Sprites, then Square.","Look at the Inspector. It already has a Transform (position, rotation, scale) and a Sprite Renderer. Change the Sprite Renderer's Color.","Click Add Component at the bottom of the Inspector and add Rigidbody 2D. Press Play. The square falls off the screen. Stop.","Add a Box Collider 2D to the square.","Make a second Square named Floor. Set its Position Y to -3 and Scale X to 10. Give it a Box Collider 2D but no Rigidbody 2D.","Press Play. Press Ctrl+S (Cmd+S on Mac) to save the scene."],
+check:"The square falls and lands on the floor."},
+{t:"Set up your code editor",time:"15 min",goal:"Double-clicking a script opens it in a proper code editor.",
+steps:["Windows: Visual Studio Community was installed with Unity in lesson 2.","Mac: install Visual Studio Code from code.visualstudio.com. Open its Extensions panel, search for Unity, and install the Unity extension by Microsoft. It adds C# support too.","In Unity, open Edit, then Preferences (on Mac: Unity, then Settings). Choose External Tools and set External Script Editor to Visual Studio or Visual Studio Code."],
+check:"In the next lesson, double-clicking a script opens it with coloured code and suggestions as you type."}
+]},
+
+{id:"w2",name:"C# for Godot coders",blurb:"Learn C#, Unity's language, by comparing it with GDScript.",lessons:[
+{t:"Your first C# script",time:"25 min",goal:"A script that prints messages to the Console.",
+intro:"C# is stricter than GDScript. Every statement ends with a semicolon, blocks of code sit inside curly braces, the type of a variable comes before its name, and capital letters matter. The script's file name must also match its class name exactly.",
+steps:["In the Project window, right-click Assets and make a folder called Scripts.","Right-click inside Scripts and choose Create, then Scripting, then MonoBehaviour Script. In some versions it is Create, then C# Script. Name it exactly `HelloUnity`.","Double-click it, replace everything with the code below, and save.","Back in Unity, wait for the small spinner at the bottom right to stop. Unity is compiling your code.","Right-click in the Hierarchy, choose Create Empty, and name it Playground. Drag the HelloUnity script onto it.","Press Play and open the Console (Window, then General, then Console, if you cannot see it)."],
+code:[C("HelloUnity","Assets/Scripts/HelloUnity.cs")],htmlAfter:true,html:CSHARP_TABLE,
+check:"The Console shows Hello, Robo! and the other lines.",
+challenge:"Add a countdown inside Start: `for (int i = 3; i > 0; i--) { Debug.Log(i); }`"},
+{t:"Make things move",time:"20 min",goal:"A sprite that moves and spins by itself.",
+intro:"`Update()` runs every frame, like `_process()` in Godot, and `Time.deltaTime` is the same as delta. A `public` variable shows up in the Inspector, so you can change it without opening the code.",
+steps:["Create a script called `Mover` and paste the code below.","Drag it onto the falling square from lesson 4, and remove that square's Rigidbody 2D so it does not fall.","Press Play. While it plays, change Speed in the Inspector and watch the square react. Remember the change will be undone when you stop."],
+code:[C("Mover","Assets/Scripts/Mover.cs")],
+check:"The square slides right while spinning, and jumps back to the left side.",
+challenge:"Make it bounce back at the edge by making speed negative when x is bigger than 8 or smaller than -8."},
+{t:"Read the keyboard",time:"20 min",goal:"Move a sprite with WASD or the arrow keys.",
+intro:"Unity 6 uses the Input System. It comes with ready-made actions: Move reads WASD, the arrow keys and a gamepad stick, and Jump reads Space.",
+steps:["Open Edit, then Project Settings, then Input System Package. If it says there are no project-wide actions, click Create a new project-wide Action Asset. Open the asset to see the Player actions, including Move and Jump.","Create a script called `InputTest` with the code below.","On the square, remove the Mover component and add InputTest.","Press Play and use the keys."],
+code:[C("InputTest","Assets/Scripts/InputTest.cs")],
+godot:"Actions are like Godot's Input Map. ReadValue on Move is like get_vector, and WasPressedThisFrame is like is_action_just_pressed.",
+why:"Many older tutorials online use `Input.GetKey`. That belongs to the old input system and causes an error in new Unity 6 projects, so stick with these actions.",
+check:"The square slides left and right, and Space prints Jump pressed! once per press."}
+]},
+
+{id:"w3",name:"Build the hero",blurb:"Import pixel art, then make a player that runs, jumps, animates and is followed by the camera.",lessons:[
+{t:"Import pixel art",time:"20 min",goal:"A sprite sheet cut into separate sprites, sharp and the right size.",
+html:SOURCES_TABLE,
+steps:["Download Kenney's Pixel Platformer pack (the same one as in Godot Academy) and unzip it.","Make a folder called Art in Assets, and drag the tile sheet and character sheet into it.","Click the tile sheet. In the Inspector set Sprite Mode to Multiple, Pixels Per Unit to 18, Filter Mode to Point (no filter) and Compression to None. Click Apply. Do the same for the character sheet.","With the tile sheet selected, click Sprite Editor. Open the Slice menu, set Type to Grid By Cell Size, enter 18 by 18, click Slice, then Apply.","Slice the character sheet the same way, using the size of one character frame."],
+why:"Pixels Per Unit of 18 makes one 18-pixel tile exactly one Unity unit, which keeps all the numbers in this course simple. Point filtering keeps the pixels crisp.",
+check:"Clicking the arrow on each sheet in the Project window shows every sprite separately, and they look sharp."},
+{t:"Make the player",time:"30 min",goal:"A player that runs and jumps on a floor.",
+tree:"Player  (Tag: Player)\n├─ Sprite Renderer\n├─ Rigidbody 2D       Gravity Scale 3, Freeze Rotation Z\n├─ Capsule Collider 2D\n├─ Player Controller  (your script)\n└─ GroundCheck        (empty child at the feet)",
+steps:["Drag one character sprite into the Scene view and rename it Player. In the Inspector, set Tag to Player.","Add a Rigidbody 2D. Set Gravity Scale to 3, tick Freeze Rotation Z under Constraints, and set Interpolate to Interpolate.","Add a Capsule Collider 2D. Click Edit Collider and drag it so it fits the body.","Right-click Player, choose Create Empty, and name it GroundCheck. Move it to just under the feet.","Open the Layer dropdown at the top of the Inspector, choose Add Layer, and type Ground in an empty slot. Set the Floor from lesson 4 to the Ground layer.","Create a script called `PlayerController`, paste the code, and add it to Player.","In the Player Controller component, drag GroundCheck into Ground Check and set Ground Layer to Ground. Press Play."],
+code:[C("PlayerController_v1","Assets/Scripts/PlayerController.cs")],
+why:"Speeds in Unity are in units per second. Because one tile is one unit, a speed of 8 means 8 tiles a second. Gravity Scale 3 makes the jump snappy and about 3 tiles high. In Unity, positive y is up.",
+godot:"A Rigidbody 2D is moved by physics, a bit like Godot's RigidBody2D. Setting its velocity ourselves every frame makes it behave like a CharacterBody2D.",
+check:"A and D run, Space jumps, and you cannot jump again in mid-air."},
+{t:"Animate the player",time:"35 min",goal:"Idle, run and jump animations that switch automatically.",
+intro:"Unity animation has two parts. Animation clips are frames played over time. An Animator Controller is a flowchart that decides which clip plays. It takes more steps than Godot's AnimatedSprite2D, but it is very powerful.",
+steps:["Select Player and open Window, then Animation, then Animation. Click Create and save the clip as `Idle.anim` in a new Animations folder. Unity adds an Animator to Player.","Drag the idle frames from the Project window into the Animation timeline.","Use the clip dropdown to Create New Clip called Run, and drag in the run frames. Make a Jump clip with one frame. Set the frame rate (Samples) to about 10.","Open Window, then Animation, then Animator. In the Parameters tab, add a Float called Speed and a Bool called Grounded.","Right-click Idle, choose Make Transition, and click Run. On that arrow add the condition Speed Greater 0.1. Make Run to Idle with Speed Less 0.1.","Make a transition from Any State to Jump with Grounded false, and from Jump to Idle with Grounded true.","Click each arrow, untick Has Exit Time, and set Transition Duration to 0 so pixel art switches instantly.","Replace PlayerController with the code below."],
+code:[C("PlayerController_v2","Assets/Scripts/PlayerController.cs (replace)")],
+check:"The player idles, runs, shows the jump frame in the air, and faces the way it moves."},
+{t:"Add a camera that follows",time:"10 min",goal:"A smooth camera that follows the player.",
+steps:["Open Window, then Package Manager. Choose Unity Registry, find Cinemachine, and click Install.","Open GameObject, then Cinemachine, and create a 2D Camera. If that item is missing, create a Cinemachine Camera instead and add a Position Composer to it.","In the Cinemachine Camera component, set Tracking Target to Player.","Set the damping a little higher, around 0.5, for a smoother follow. The Main Camera gets a Cinemachine Brain automatically."],
+check:"The view follows the player smoothly when you play."},
+{t:"Make jumping feel great",time:"25 min",goal:"Jumping that feels like a professional platformer, ready for hazards and enemies.",
+intro:"This version adds the same tricks as in Godot Academy: coyote time, a jump buffer, a smaller hop when you let go early, faster falling, and acceleration. It also adds Bounce and Die for the enemies and spikes coming next, and a slot for a jump sound.",
+steps:["Replace PlayerController with the code below.","Unity adds an Audio Source to Player automatically. Untick its Play On Awake.","Play and compare: tap jump, hold jump, and jump just after running off an edge."],
+code:[C("PlayerController_final","Assets/Scripts/PlayerController.cs (replace)")],
+check:"Holding jump goes higher than tapping. A jump just after leaving a ledge still works.",
+challenge:"Tune Acceleration, Jump Speed and Fall Gravity Scale in the Inspector while playing. Write down the numbers you like, then type them in again after you stop."}
+]},
+
+{id:"w4",name:"Build the world",blurb:"Paint a level with tiles, then add coins, hazards, an enemy, sound and menus.",lessons:[
+{t:"Paint a level with Tilemaps",time:"35 min",goal:"A level painted from tiles that the player stands on.",
+steps:["Delete the Floor square. Right-click in the Hierarchy and choose 2D Object, then Tilemap, then Rectangular. Rename the new Tilemap to Ground.","Open Window, then 2D, then Tile Palette. Click Create New Palette, name it Level, and save it in a new Palettes folder.","Drag your sliced tile sheet into the palette and save the tiles in a new Tiles folder.","Pick a tile, choose the brush tool, and paint in the Scene view. Use the eraser and box fill tools for bigger changes.","Select Ground. Add a Tilemap Collider 2D and set its Composite Operation to Merge. Then add a Composite Collider 2D, and set the Rigidbody 2D it adds to Static.","Set the Ground object's Layer to Ground.","For background decoration, add a second Tilemap called Decor, set its Order in Layer to -1 in the Tilemap Renderer, and give it no collider."],
+why:"The Composite Collider joins the tiles into one smooth shape, so the player does not catch on the seams between tiles.",
+check:"The player walks and jumps on your tiles, and decorations sit behind them.",
+challenge:"Paint a staircase, a gap and a floating platform."},
+{t:"Coins, prefabs and a score",time:"35 min",goal:"Coins that disappear when collected, and a counter on screen.",
+intro:"A prefab is a saved GameObject you can place many times, like a saved scene in Godot. Change the prefab and every copy updates. The score lives in a static class called GameManager, which any script can reach, a bit like a Godot Autoload.",
+steps:["Create the GameManager script with the first code block. It does not go on any GameObject.","Drag a coin sprite into the scene and name it Coin. Add a Circle Collider 2D and tick Is Trigger. Add the Coin script (second code block).","Make a Prefabs folder and drag Coin from the Hierarchy into it. It turns blue in the Hierarchy, which means it is a prefab. Place more coins by dragging the prefab in, or with Ctrl+D.","Right-click in the Hierarchy and choose UI, then Text - TextMeshPro. The first time, click Import TMP Essentials. Unity creates a Canvas with the text inside.","Use the Anchor Presets box in the text's Rect Transform to pin it to the top left, and make the font bigger.","Add the Hud script (third code block) to the Canvas, and drag the text into its Coin Text slot."],
+code:[C("GameManager","Assets/Scripts/GameManager.cs"),C("Coin","Assets/Scripts/Coin.cs"),C("Hud","Assets/Scripts/Hud.cs")],
+godot:"OnTriggerEnter2D is like body_entered, and CompareTag(\"Player\") is like checking a group.",
+check:"Coins vanish when touched and the counter goes up by one each time."},
+{t:"Spikes, pits and restarting",time:"20 min",goal:"Touching spikes or falling off the world restarts the level.",
+steps:["Rename your scene to Level1 (right-click it in the Project window). Open File, then Build Profiles, and in the Scene List click Add Open Scenes. A scene must be in this list before code can load it.","Make Spikes: a spike sprite with a Box Collider 2D a little smaller than the spikes, with Is Trigger ticked. Add the Hazard script and make it a prefab.","Make a KillZone: an empty GameObject with a very wide Box Collider 2D, Is Trigger ticked, and the Hazard script. Put it below the whole level."],
+code:[C("Hazard","Assets/Scripts/Hazard.cs")],
+check:"Touching spikes or falling into a pit turns the player red and restarts the level with coins back at 0."},
+{t:"Add an enemy",time:"35 min",goal:"A slime that patrols, turns at edges and walls, and can be stomped.",
+tree:"Slime\n├─ Sprite Renderer\n├─ Rigidbody 2D     Gravity Scale 3, Freeze Rotation Z\n├─ Box Collider 2D\n├─ Enemy            (your script)\n└─ EdgeCheck        (empty child at the front bottom corner)",
+steps:["Make the Slime to match the tree.","Set EdgeCheck's Position to X -0.5 and Y -0.3, so it sits at the front corner while the slime walks left.","Add the Enemy script, drag EdgeCheck into Edge Check, and set Ground Layer to Ground.","Put the slime on a platform and press Play."],
+code:[C("Enemy","Assets/Scripts/Enemy.cs")],
+why:"A raycast is an invisible line. One points down from EdgeCheck to find the floor ahead. Another points forward to find walls. If there is no floor or there is a wall, the slime turns around.",
+check:"The slime walks and turns at edges and walls. Landing on it defeats it and bounces you. Touching its side restarts the level."},
+{t:"Sound and music",time:"20 min",goal:"A jump sound, a coin sound and looping music.",
+steps:["Make an Audio folder and drag in your sound files. Unity reads .wav, .ogg and .mp3.","Select Player and drag your jump sound into Jump Sound.","Double-click the Coin prefab to open it, drag your coin sound into Pickup Sound, then go back to the scene. Every coin now has the sound.","Create an empty GameObject called Music. Add an Audio Source, drag your music into Audio Resource (called AudioClip in some versions), tick Loop and Play On Awake, and set Volume to about 0.5."],
+why:"The coin destroys itself straight away, so it plays its sound with AudioSource.PlayClipAtPoint. That creates a separate sound that keeps playing after the coin is gone.",
+check:"Jumping and coins make sounds, and the music loops."},
+{t:"Menus, a goal flag and a win screen",time:"30 min",goal:"A title screen, a flag that ends the level, and a win screen.",
+steps:["Make a Goal: a flag sprite with a Box Collider 2D, Is Trigger ticked, and the Goal script. Its Next Scene is WinScreen.","Create a new scene (File, then New Scene) and save it as TitleScreen. Add UI, then Text - TextMeshPro, for the game's name, and UI, then Button - TextMeshPro, with the text Play.","Create an empty GameObject called Menu and add the MenuButtons script.","Select the Button. Under On Click, click +, drag Menu into the slot, choose MenuButtons, then LoadScene, and type Level1 in the box.","Make a WinScreen scene the same way, with the text You win! and a button that loads TitleScreen.","Open File, then Build Profiles. Add all three scenes to the Scene List and drag TitleScreen to the top, so the game starts there."],
+code:[C("Goal","Assets/Scripts/Goal.cs"),C("MenuButtons","Assets/Scripts/MenuButtons.cs")],
+godot:"A button's On Click list is like connecting a signal in Godot's Node dock, but done in the Inspector.",
+check:"Open TitleScreen and press Play. The full loop works: title, level, flag, win screen, and back to the title."}
+]},
+
+{id:"w5",name:"Ship it and go further",blurb:"Design your level, fix bugs, share your game, and try 3D.",lessons:[
+{t:"Plan and build your level",time:"60+ min",goal:"Your own designed level, built and playtested.",
+intro:"Use the same teach, test, twist plan as Godot Academy. In the Universal 2D template, the camera shows 10 units from top to bottom, so with one tile per unit, one screen is about 10 tiles tall and 18 wide.",
+html:LEVEL_TABLE,
+steps:["Draw the level on squared paper first, one square per tile, with five sections.","Block it out with ground tiles only and play it straight away.","Add coins, spikes, the slime and the flag, then play every section again.","Decorate with the Decor tilemap, and change the sky colour on the Main Camera's Background.","Watch someone else play without helping. Fix the three biggest problems and test again."],
+check:"Two different people can finish your level."},
+{t:"Fix bugs like a pro",time:"15 min",goal:"Know what common Console errors mean and how to track problems down.",
+html:ERRORS_TABLE,
+steps:["Red errors in the Console stop your scripts compiling. Fix the first one first, because it often causes the others.","Double-click an error to jump to the line in your code editor.","Add `Debug.Log()` lines to see values, for example `Debug.Log(rb.linearVelocity);`","While playing, switch to the Scene view to watch from outside. Selected objects show their colliders as green outlines.","Use the Pause and Step buttons to move one frame at a time."],
+check:"Delete a semicolon on purpose, read the error, and fix it."},
+{t:"Build and share your game",time:"20 min",goal:"A version of your game other people can play.",
+steps:["Open File, then Build Profiles. Choose Web, and click Switch Platform. If Web is not installed, add Web Build Support from the Installs tab in Unity Hub.","Click Player Settings, open Publishing Settings, and tick Decompression Fallback. This helps the game load on sites like itch.io.","Click Build, and choose a new empty folder outside your project.","Test it with Build And Run, because web builds need a web server to open.","To share on itch.io, zip everything in the build folder and upload it as an HTML game. Ask a parent to set up and manage the account."],
+check:"Someone plays your game in their browser."},
+{t:"Try 3D: roll a ball",time:"30 min",goal:"A ball you roll around a 3D floor, which is where Unity shines.",
+steps:["In Unity Hub, make a new project with the Universal 3D template.","Add a 3D Object, then Plane, for the floor. Add a 3D Object, then Sphere, at Position Y 0.5 and name it Ball.","Add a Rigidbody (not Rigidbody 2D) to Ball, and add the Roller script.","Move the Main Camera above and behind the ball, angled down, so you can see it.","Add a few Cubes around the edge as walls. Press Play and roll around."],
+code:[C("Roller","Assets/Scripts/Roller.cs")],
+check:"WASD rolls the ball around and it bounces off the walls.",
+challenge:"Unity Learn's free Roll-a-ball tutorial continues from here with pickups, a score and a camera that follows."}
+]}
+];
+
+function codeBlockFor(key,label){return '<div class="code"><div class="code-h"><span>'+label+'</span><button class="btn ghost small" type="button" data-copy="'+key+'">Copy</button></div><pre><code>'+String(CODE[key]).replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</code></pre></div>'}
+
+/* ---------- render ---------- */
+var KEY="unityacademy.done.v1",OKEY="unityacademy.open.v1";
+var done={},opened={};
+try{done=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
+try{opened=JSON.parse(localStorage.getItem(OKEY)||"{}")||{}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(done));localStorage.setItem(OKEY,JSON.stringify(opened))}catch(e){}}
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmt(s){return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>")}
+
+var total=0,n=0;
+WORLDS.forEach(function(w,wi){w.lessons.forEach(function(l,li){n++;l.n=n;l.id=w.id+"-"+(li+1);total++})});
+
+function codeBlock(c){
+  var text=CODE[c.key]||"";
+  return '<div class="code"><div class="code-h"><span>C# · '+esc(c.file)+'</span><button class="btn ghost small" type="button" data-copy="'+c.key+'">Copy</button></div><pre><code>'+esc(text)+'</code></pre></div>';
+}
+function callout(cls,k,t){return '<div class="callout '+cls+'"><b class="k">'+k+'</b><span>'+fmt(t)+'</span></div>'}
+function lessonHtml(l){
+  var h='<details class="lesson'+(done[l.id]?' is-done':'')+'" id="'+l.id+'"'+(opened[l.id]?' open':'')+'>'+
+    '<summary><span class="num">'+l.n+'</span><span class="sum-t"><h3>'+esc(l.t)+'</h3><span>'+esc(l.time)+(done[l.id]?' · Done':'')+'</span></span><span class="chev" aria-hidden="true">›</span></summary>'+
+    '<div class="body"><p class="goal">Goal: '+fmt(l.goal)+'</p>';
+  if(l.intro)h+='<p>'+fmt(l.intro)+'</p>';
+  if(l.html&&!l.htmlAfter)h+=l.html;
+  if(l.tree)h+='<pre class="tree">'+esc(l.tree)+'</pre>';
+  if(l.steps)h+='<ol class="steps">'+l.steps.map(function(s){return '<li>'+fmt(s)+'</li>'}).join('')+'</ol>';
+  (l.code||[]).forEach(function(c){h+=codeBlock(c)});
+  if(l.html&&l.htmlAfter)h+=l.html;
+  if(l.why)h+=callout("why","Why it works",l.why);
+  if(l.godot)h+=callout("scratch","Godot link",l.godot);
+  h+=callout("check","Check it works",l.check);
+  if(l.challenge)h+=callout("challenge","Challenge",l.challenge);
+  h+='<div class="finish"><label for="d-'+l.id+'"><input type="checkbox" id="d-'+l.id+'" data-done="'+l.id+'"'+(done[l.id]?' checked':'')+'> I finished this lesson</label><button class="btn small" type="button" data-next="'+l.n+'">Next lesson</button></div>';
+  return h+'</div></details>';
+}
+function render(){
+  $("worlds").innerHTML=WORLDS.map(function(w,i){
+    return '<section class="world" id="'+w.id+'" aria-labelledby="h-'+w.id+'"><div class="world-head"><span class="w">World '+(i+1)+'</span><h2 id="h-'+w.id+'">'+esc(w.name)+'</h2><p>'+esc(w.blurb)+'</p></div><div class="lessons">'+w.lessons.map(lessonHtml).join('')+'</div></section>';
+  }).join('');
+  $("tabsIn").innerHTML=WORLDS.map(function(w,i){return '<a href="#'+w.id+'">World '+(i+1)+'</a>'}).join('')+'<a href="#cheat">Cheat sheet</a>';
+  $("cheatCode").innerHTML=codeBlock(C("Cheatsheet","C# basics"));
+  updateProgress();
+}
+function updateProgress(){
+  var d=0;
+  $("mapRow").innerHTML=WORLDS.map(function(w,i){
+    var c=w.lessons.filter(function(l){return done[l.id]}).length;d+=c;
+    return '<a class="stop'+(c===w.lessons.length?' done':'')+'" href="#'+w.id+'"><span class="w">World '+(i+1)+'</span><span class="n">'+esc(w.name)+'</span><span class="c">'+c+' of '+w.lessons.length+' lessons</span></a>';
+  }).join('');
+  $("overallLab").textContent=d+" of "+total+" lessons finished";
+  $("overallFill").style.width=Math.round(d/total*100)+"%";
+  $("overallBar").setAttribute("aria-valuemax",total);$("overallBar").setAttribute("aria-valuenow",d);
+}
+function allLessons(){var a=[];WORLDS.forEach(function(w){a=a.concat(w.lessons)});return a}
+
+document.addEventListener("toggle",function(e){
+  var t=e.target;if(!t.classList||!t.classList.contains("lesson"))return;
+  if(t.open)opened[t.id]=true;else delete opened[t.id];save();
+},true);
+document.addEventListener("change",function(e){
+  var id=e.target.getAttribute&&e.target.getAttribute("data-done");if(!id)return;
+  if(e.target.checked)done[id]=true;else delete done[id];
+  var det=$(id);det.classList.toggle("is-done",e.target.checked);
+  var span=det.querySelector(".sum-t span");var l=allLessons().filter(function(x){return x.id===id})[0];
+  span.textContent=l.time+(e.target.checked?" · Done":"");
+  save();updateProgress();
+});
+document.addEventListener("click",function(e){
+  var nb=e.target.closest&&e.target.closest("[data-next]");
+  if(nb){
+    var cur=+nb.getAttribute("data-next"),all=allLessons(),next=all[cur];
+    var me=all[cur-1];var md=$(me.id);
+    if(!done[me.id]){done[me.id]=true;md.classList.add("is-done");md.querySelector("[data-done]").checked=true;md.querySelector(".sum-t span").textContent=me.time+" · Done";updateProgress()}
+    md.open=false;delete opened[me.id];
+    if(next){var nd=$(next.id);nd.open=true;opened[next.id]=true;var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;nd.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})}
+    else{$("cheat").scrollIntoView()}
+    save();return;
+  }
+  var b=e.target.closest&&e.target.closest("[data-copy]");
+  if(!b)return;
+  var text=CODE[b.getAttribute("data-copy")]||"";
+  function ok(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},1500)}
+  function fb(){var pre=b.closest(".code").querySelector("pre"),r=document.createRange();r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Selected";setTimeout(function(){b.textContent="Copy"},1800)}
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fb)}else{fb()}}catch(err){fb()}
+});
+
+render();
+if(!Object.keys(opened).length){var f=$("w1-1");if(f)f.open=true}
+})();
+</script>

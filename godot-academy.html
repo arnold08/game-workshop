@@ -128,6 +128,12 @@ tr:last-child td{border-bottom:0}
 .res p{font-size:.92rem;color:var(--muted)}
 .card{background:var(--surface);border:3px solid var(--line);border-radius:14px;box-shadow:5px 5px 0 var(--shadow);padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
 .card h3{font-size:1.4rem}
+.ready-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.ready-list label{display:flex;gap:10px;align-items:flex-start;font-weight:700;cursor:pointer}
+.ready-list input{width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--good)}
+.ready-msg{font-family:var(--display);font-size:1.1rem}
+.next-cta{justify-items:start}
+.next-cta .btn{text-decoration:none;font-size:1.1rem}
 .foot{margin-top:40px;color:var(--muted);font-size:.9rem;max-width:44rem}
 .msg{font-size:.88rem;color:var(--muted)}
 </style>
@@ -149,6 +155,46 @@ tr:last-child td{border-bottom:0}
 
 <main class="wrap">
   <div id="worlds"></div>
+
+  <section class="world" id="next" aria-labelledby="h-next">
+    <div class="world-head"><span class="w">After World 7</span><h2 id="h-next">What's next</h2><p>Keep building in Godot, or take your skills to Unity, the engine behind Hollow Knight, Cuphead and Among Us. Here is how to tell when you are ready.</p></div>
+    <div class="sheet">
+      <div class="card"><h3>Are you ready for Unity?</h3>
+        <p>Tick each one that is true. When you can tick most of them, Unity Academy is a good next step.</p>
+        <ul class="ready-list">
+          <li><label for="r-1"><input type="checkbox" id="r-1" data-ready="r1"> I have finished one or two small Godot games, not just started them</label></li>
+          <li><label for="r-2"><input type="checkbox" id="r-2" data-ready="r2"> I write and change scripts myself, instead of only copying them</label></li>
+          <li><label for="r-3"><input type="checkbox" id="r-3" data-ready="r3"> I can read an error message and fix the problem on my own</label></li>
+          <li><label for="r-4"><input type="checkbox" id="r-4" data-ready="r4"> I want to make something in 3D, or a game for phones</label></li>
+        </ul>
+        <p class="ready-msg" id="readyMsg" role="status"></p>
+      </div>
+      <div class="card"><h3>What Unity needs</h3>
+        <ul class="steps" style="list-style:disc">
+          <li>A Windows PC or a Mac. Unity does not run on a Chromebook.</li>
+          <li>At least 8 GB of memory and about 15 GB of free space.</li>
+          <li>A Unity account. Unity's terms have a minimum age, so a parent creates it and signs in for you. Unity Personal is free.</li>
+          <li>C#, a stricter language than GDScript, with semicolons, curly braces and types. Unity Academy teaches it by comparing it with GDScript.</li>
+        </ul>
+      </div>
+      <div class="card"><h3>Your Godot skills carry over</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Idea</th><th>In Godot</th><th>In Unity</th></tr></thead>
+          <tbody>
+            <tr><td>A reusable object, like a coin</td><td>Scene</td><td>Prefab</td></tr>
+            <tr><td>Its building blocks</td><td>Nodes</td><td>Components</td></tr>
+            <tr><td>Reacting when something happens</td><td>Signals</td><td>Events</td></tr>
+            <tr><td>Movement, jumping and physics</td><td>The same ideas</td><td>The same ideas</td></tr>
+          </tbody>
+        </table></div>
+        <p>Successful games such as Brotato and Dome Keeper were made in Godot, so there is no rush to switch. Game Forge has more build guides to try in the meantime.</p>
+      </div>
+      <div class="card next-cta"><h3>Unity Academy</h3>
+        <p>23 lessons: install Unity, learn C#, rebuild your platformer, share it online, and roll your first 3D ball.</p>
+        <a class="btn" href="unity-academy.html">Go to Unity Academy</a>
+      </div>
+    </div>
+  </section>
 
   <section class="world" id="cheat" aria-labelledby="h-cheat">
     <div class="world-head"><span class="w">Keep this open</span><h2 id="h-cheat">Cheat sheet</h2><p>Shortcuts, GDScript at a glance, and where to learn more.</p></div>
@@ -462,7 +508,7 @@ function render(){
   $("worlds").innerHTML=WORLDS.map(function(w,i){
     return '<section class="world" id="'+w.id+'" aria-labelledby="h-'+w.id+'"><div class="world-head"><span class="w">World '+(i+1)+'</span><h2 id="h-'+w.id+'">'+esc(w.name)+'</h2><p>'+esc(w.blurb)+'</p></div><div class="lessons">'+w.lessons.map(lessonHtml).join('')+'</div></section>';
   }).join('');
-  $("tabsIn").innerHTML=WORLDS.map(function(w,i){return '<a href="#'+w.id+'">World '+(i+1)+'</a>'}).join('')+'<a href="#cheat">Cheat sheet</a>';
+  $("tabsIn").innerHTML=WORLDS.map(function(w,i){return '<a href="#'+w.id+'">World '+(i+1)+'</a>'}).join('')+'<a href="#next">What\'s next</a><a href="#cheat">Cheat sheet</a>';
   $("cheatCode").innerHTML=codeBlock(C("cheatsheet","GDScript basics"));
   updateProgress();
 }
@@ -509,6 +555,23 @@ document.addEventListener("click",function(e){
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fb)}else{fb()}}catch(err){fb()}
 });
 
+
+/* ---------- readiness ---------- */
+var RKEY="godotacademy.ready.v1",ready={};
+try{ready=JSON.parse(localStorage.getItem(RKEY)||"{}")||{}}catch(e){}
+function paintReady(){
+  var boxes=document.querySelectorAll("[data-ready]"),n=0;
+  Array.prototype.forEach.call(boxes,function(b){b.checked=!!ready[b.getAttribute("data-ready")];if(b.checked)n++});
+  var m=document.getElementById("readyMsg");
+  m.textContent=n>=3?(n+" of 4 ticked. You are ready to try Unity Academy."):n>0?(n+" of 4 ticked. Keep building in Godot and come back soon."):"Nothing ticked yet. Finish the Godot worlds first.";
+}
+document.addEventListener("change",function(e){
+  var k=e.target.getAttribute&&e.target.getAttribute("data-ready");if(!k)return;
+  if(e.target.checked)ready[k]=true;else delete ready[k];
+  try{localStorage.setItem(RKEY,JSON.stringify(ready))}catch(err){}
+  paintReady();
+});
+paintReady();
 render();
 if(!Object.keys(opened).length){var f=$("w1-1");if(f)f.open=true}
 })();
