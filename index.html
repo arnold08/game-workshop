@@ -226,7 +226,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
   <section class="sec" id="ladder" aria-labelledby="h-ladder">
     <div class="sec-head">
       <h2 id="h-ladder">How big is the job?</h2>
-      <p>Effort ratings are a rough guide to a playable first version, at a few hours a week with a parent nearby. Tap a genre to jump to it.</p>
+      <p>Effort ratings are a rough guide to a playable first version, if you spend a few hours a week on it. Tap a genre to jump to it.</p>
     </div>
     <div class="ladder" id="ladderBox"></div>
   </section>
@@ -252,7 +252,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
           <button type="button" data-v="high" aria-pressed="false">Heavy and up</button>
         </div>
       </div>
-      <label class="check" for="fFav"><input type="checkbox" id="fFav"> Only matches for his favourite games</label>
+      <label class="check" for="fFav"><input type="checkbox" id="fFav"> Only matches for your favourite games</label>
     </div>
     <p class="count" id="count" role="status"></p>
     <div class="grid" id="genreGrid"></div>
@@ -339,7 +339,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
       <p>Work through the steps in order and test after every step before moving on. Ticks are saved in this browser.</p>
     </div>
     <div id="guideBody"></div>
-    <p class="foot">Time ranges and effort ratings are estimates for a first playable version and will vary with how much art, sound and polish he wants. Godot guides are written for Godot 4.7. Numbers in the code, such as speeds and forces, are starting points to tune by feel.</p>
+    <p class="foot">Time ranges and effort ratings are estimates for a first playable version and will vary with how much art, sound and polish you want. Godot guides are written for Godot 4.7. Numbers in the code, such as speeds and forces, are starting points to tune by feel.</p>
   </section>
 </main>
 
@@ -352,7 +352,7 @@ var TIMEFULL=["","2 to 4 hours","4 to 8 hours","15 to 20 hours","30 to 50 hours"
 var PLABEL={scratch:"Scratch",godot:"Godot",either:"Scratch or Godot"};
 
 var MECH=[
-{id:"move",name:"Move & jump",effort:1,best:"either",what:"Arrow keys, gravity and a jump. He already has this from his platformer.",scratch:"A gravity variable that changes y, and a check for touching the ground.",godot:"CharacterBody2D with a velocity vector and move_and_slide()."},
+{id:"move",name:"Move & jump",effort:1,best:"either",what:"Arrow keys, gravity and a jump. You already did this in your Scratch platformer.",scratch:"A gravity variable that changes y, and a check for touching the ground.",godot:"CharacterBody2D with a velocity vector and move_and_slide()."},
 {id:"collide",name:"Collision & hit detection",effort:1,best:"either",what:"Knowing when two things touch and deciding what happens next.",scratch:"The touching block, or touching colour for track edges.",godot:"Area2D for pickups and hurt zones. Collision layers stop bullets hitting the shooter."},
 {id:"score",name:"Score, lives & game over",effort:1,best:"either",what:"The numbers a player cares about, plus the end screen.",scratch:"Variables, and a broadcast message for game over.",godot:"A variable in an Autoload script, and signals that update the label."},
 {id:"timer",name:"Timers & cooldowns",effort:1,best:"either",what:"Countdowns, spell cooldowns and waves that start on a beat.",scratch:"The timer reporter and wait blocks.",godot:"A Timer node. Connect its timeout signal."},
@@ -378,10 +378,10 @@ var MECH=[
 ];
 
 var GEN=[
-{id:"arcade",name:"Arcade classic remake",insp:"Pong, Breakout, Snake",pitch:"Rebuild a classic in an afternoon, then add one twist of his own.",platform:"scratch",effort:1,mech:["collide","score","juice","move"],slice:"A ball that bounces off a paddle you can move.",learn:"Finishing a whole game, start to end.",note:"The fastest win on this page. Do one first to build momentum."},
-{id:"runner",name:"Endless runner",insp:"Sonic-style auto-run, Subway Surfers",pitch:"The hero runs on its own. You dodge, jump and collect while the speed creeps up.",platform:"scratch",effort:2,mech:["scroll","spawn","score","juice"],slice:"One lane of obstacles that gets faster the longer you survive.",learn:"Spawning, scrolling and high scores.",note:"Reuses what he learned in his platformer."},
-{id:"cyoa",name:"Choose-your-own adventure",insp:"Text adventures, visual novels",pitch:"A branching story where your choices change the ending.",platform:"scratch",effort:2,mech:["dialog","inv"],slice:"Three scenes and one choice that changes how it ends.",learn:"Branching plots and tracking choices with variables.",note:"Pairs well with his story planning. The writing is most of the work."},
-{id:"clicker",name:"Tycoon or idle clicker",insp:"Cookie Clicker, cafe tycoons",pitch:"Earn coins, buy upgrades and watch the numbers climb.",platform:"scratch",effort:2,mech:["econ","score","timer"],slice:"Click to earn coins and buy one upgrade.",learn:"Economy maths and how costs scale.",note:"Moves to Godot if he wants it to remember progress between plays."},
+{id:"arcade",name:"Arcade classic remake",insp:"Pong, Breakout, Snake",pitch:"Rebuild a classic in an afternoon, then add one twist of your own.",platform:"scratch",effort:1,mech:["collide","score","juice","move"],slice:"A ball that bounces off a paddle you can move.",learn:"Finishing a whole game, start to end.",note:"The fastest win on this page. Do one first to build momentum."},
+{id:"runner",name:"Endless runner",insp:"Sonic-style auto-run, Subway Surfers",pitch:"The hero runs on its own. You dodge, jump and collect while the speed creeps up.",platform:"scratch",effort:2,mech:["scroll","spawn","score","juice"],slice:"One lane of obstacles that gets faster the longer you survive.",learn:"Spawning, scrolling and high scores.",note:"Reuses what you learned in your platformer."},
+{id:"cyoa",name:"Choose-your-own adventure",insp:"Text adventures, visual novels",pitch:"A branching story where your choices change the ending.",platform:"scratch",effort:2,mech:["dialog","inv"],slice:"Three scenes and one choice that changes how it ends.",learn:"Branching plots and tracking choices with variables.",note:"Pairs well with your story planning. The writing is most of the work."},
+{id:"clicker",name:"Tycoon or idle clicker",insp:"Cookie Clicker, cafe tycoons",pitch:"Earn coins, buy upgrades and watch the numbers climb.",platform:"scratch",effort:2,mech:["econ","score","timer"],slice:"Click to earn coins and buy one upgrade.",learn:"Economy maths and how costs scale.",note:"Moves to Godot if you want it to remember progress between plays."},
 {id:"shooter",name:"Top-down shooter",insp:"Twin-stick shooters, Space Invaders",pitch:"Move, aim and survive waves of enemies.",platform:"either",effort:2,mech:["spawn","collide","health","ai"],slice:"A ship that fires bullets, and one enemy that dies when hit.",learn:"Spawning, collision and wave difficulty.",note:"Scratch clones work fine. Godot is cleaner once there are lots of bullets and waves."},
 {id:"puzzle",name:"Grid puzzle",insp:"Sokoban, sliding tiles, match-3",pitch:"Push, slide or swap things on a grid to solve each level.",platform:"scratch",effort:3,mech:["grid","move","score"],slice:"One level where you push a box onto a target.",learn:"Grid logic, undo, and designing levels that teach.",note:"Great logic practice. Match-3 is far harder than Sokoban, so start with Sokoban."},
 {id:"rhythm",name:"Rhythm game",insp:"Guitar Hero, Beat Saber",pitch:"Notes fall in time to a song and you hit them on the beat.",platform:"either",effort:3,mech:["rhythm","timer","score","juice"],slice:"One 30-second song with four lanes of notes.",learn:"Timing windows and syncing to audio.",note:"Scratch drifts out of sync a little. Godot can read the song's position for tighter timing."},
@@ -389,14 +389,14 @@ var GEN=[
 {id:"wtc",name:"Shape-shifting physics puzzler",insp:"What the Car?",fav:true,pitch:"Reach the goal, but your vehicle keeps turning into something ridiculous.",platform:"godot",effort:3,mech:["rigid","collide","juice"],slice:"A car, a flag and one transformation that solves the level.",learn:"Physics bodies, swapping scenes and funny level design.",note:"Most of the effort goes into ideas for levels, not code."},
 {id:"adventure",name:"Top-down adventure",insp:"Zelda, Pokémon",pitch:"Explore rooms, find keys, fight small enemies and open doors.",platform:"godot",effort:3,mech:["grid","ai","health","inv","dialog"],slice:"Walk between two rooms and open one locked door.",learn:"Tilemaps, switching scenes and simple enemy AI.",note:"A gentle first step into how Godot scenes fit together."},
 {id:"td",name:"Tower defence",insp:"Bloons, Plants vs Zombies",pitch:"Place towers to stop waves of enemies walking a path.",platform:"godot",effort:3,mech:["waypoints","spawn","timer","econ","ai"],slice:"One enemy walks a path and one tower shoots it.",learn:"Targeting, waves and balancing an economy.",note:"Systems that interact make this a good design lesson."},
-{id:"sonic",name:"Momentum platformer",insp:"Sonic",fav:true,pitch:"Build speed, hit ramps and keep your momentum.",platform:"godot",effort:4,mech:["move","drift","slopes","scroll","juice"],slice:"Run down a ramp and jump farther because of the speed.",learn:"Acceleration, friction and camera follow.",note:"Builds on his platformer. Slopes and loops are the hard part, so ship without loops first."},
+{id:"sonic",name:"Momentum platformer",insp:"Sonic",fav:true,pitch:"Build speed, hit ramps and keep your momentum.",platform:"godot",effort:4,mech:["move","drift","slopes","scroll","juice"],slice:"Run down a ramp and jump farther because of the speed.",learn:"Acceleration, friction and camera follow.",note:"Builds on your platformer. Slopes and loops are the hard part, so ship without loops first."},
 {id:"farm",name:"Farming and life sim",insp:"Stardew Valley",fav:true,pitch:"Plant, water, harvest and sell, one day at a time.",platform:"godot",effort:4,mech:["grid","time","inv","save","econ","dialog"],slice:"Plant one crop, wait one day, harvest it and sell it.",learn:"Tilemaps, inventory, a day clock and saving.",note:"Open-ended, so it can grow for months. Leave the town and villagers until the farm works."},
 {id:"rogue",name:"Roguelike dungeon",insp:"Binding of Isaac, Dead Cells",pitch:"Fight through randomly built rooms. If you lose, you start again.",platform:"godot",effort:4,mech:["procgen","ai","health","inv","spawn"],slice:"Three connected rooms picked at random each run.",learn:"Procedural generation and randomised loot.",note:"A simple room shuffler gives the big aha moment. Full map generation can wait."},
 {id:"rpg",name:"Turn-based RPG or card battler",insp:"Pokémon battles, Slay the Spire",pitch:"Take turns choosing moves, using items and beating bosses.",platform:"godot",effort:4,mech:["ability","health","inv","dialog"],slice:"One fight with two moves each and a winner.",learn:"Stats, menus and data-driven design.",note:"Menus take time. Godot Resources make new moves and cards easy to add."},
 {id:"magic",name:"Magic school action game",insp:"Hogwarts Legacy",fav:true,pitch:"Learn spells, explore a castle courtyard and take on small duels.",platform:"godot",effort:4,mech:["ability","timer","ai","dialog","health"],slice:"One spell with a cooldown that defeats one enemy.",learn:"Abilities as data, cooldowns and quests.",note:"Keep it top-down and in one courtyard. The whole castle can be the sequel."},
 {id:"three",name:"3D collect-a-thon",insp:"Super Mario 64, Crash Bandicoot",pitch:"Run and jump around a small 3D island collecting stars.",platform:"godot",effort:4,mech:["move","collide","score"],slice:"Run around a flat island and collect five coins.",learn:"3D space, cameras and lighting.",note:"New ideas everywhere. Start from one of Godot's 3D demo projects."},
 {id:"metroid",name:"Metroidvania",insp:"Hollow Knight, Metroid",pitch:"One connected map where each new ability unlocks new places.",platform:"godot",effort:5,mech:["move","ai","save","scroll","inv"],slice:"One locked door and one power-up that opens it.",learn:"Map design and gating progress.",note:"Very large. The first playable slice is the whole point."},
-{id:"rts",name:"Real-time strategy lite",insp:"Age of Empires, Clash of Clans",pitch:"Gather resources, train units and send them to fight.",platform:"godot",effort:5,mech:["pathfind","ai","econ","spawn"],slice:"Select one unit and click to send it around a wall.",learn:"Selection, pathfinding and AI opponents.",note:"A big stretch goal. Save it for after he has finished two other games."}
+{id:"rts",name:"Real-time strategy lite",insp:"Age of Empires, Clash of Clans",pitch:"Gather resources, train units and send them to fight.",platform:"godot",effort:5,mech:["pathfind","ai","econ","spawn"],slice:"Select one unit and click to send it around a wall.",learn:"Selection, pathfinding and AI opponents.",note:"A big stretch goal. Save it for after you have finished two other games."}
 ];
 
 var TOOLKIT=[
